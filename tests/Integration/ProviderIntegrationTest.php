@@ -47,6 +47,8 @@ final class ProviderIntegrationTest extends FunctionalTestCase
         yield 'openai' => ['openai', ['OPENAI_API_KEY', 'HTML_TRANSLATOR_OPENAI_MODEL']];
         yield 'anthropic' => ['anthropic', ['ANTHROPIC_API_KEY', 'HTML_TRANSLATOR_ANTHROPIC_MODEL']];
         yield 'gemini' => ['gemini', ['GEMINI_API_KEY', 'HTML_TRANSLATOR_GEMINI_MODEL']];
+        // A local server (ollama serve); skipped unless both are set.
+        yield 'ollama' => ['ollama', ['OLLAMA_BASE_URL', 'HTML_TRANSLATOR_OLLAMA_MODEL']];
     }
 
     /**

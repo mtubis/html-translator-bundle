@@ -17,3 +17,7 @@ html_translator:
             driver: gemini
             api_key: '%env(GEMINI_API_KEY)%'
             model: '%env(HTML_TRANSLATOR_GEMINI_MODEL)%'
+        ollama:
+            driver: ollama
+            model: '%env(HTML_TRANSLATOR_OLLAMA_MODEL)%'
+            base_url: '%env(OLLAMA_BASE_URL)%'
