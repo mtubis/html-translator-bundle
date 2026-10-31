@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace HtmlTranslator\Bundle;
 
 use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
+use HtmlTranslator\Bundle\DependencyInjection\ProfilerDefinitions;
 use HtmlTranslator\Bundle\DependencyInjection\ProviderDefinitions;
 use HtmlTranslator\Bundle\DependencyInjection\TranslatorDefinitions;
 use SensitiveParameter;
@@ -36,6 +37,7 @@ final class HtmlTranslatorBundle extends AbstractBundle
         $container->import('../config/services.php');
         ProviderDefinitions::register($config, $builder);
         TranslatorDefinitions::register($config, $builder);
+        ProfilerDefinitions::register($config, $builder);
     }
 
     public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
