@@ -1,0 +1,25 @@
+# Scenario fixture for tests/Documentation: every provider entry the README names, all offline.
+html_translator:
+    default_provider: openai
+    http:
+        client: test.no_http_client
+    providers:
+        openai:
+            driver: pseudo
+        anthropic:
+            driver: pseudo
+    profiles:
+        docs:
+            preset: technical
+
+services:
+    # A request would be a bug in a snippet: the pseudo driver never sends one.
+    test.no_http_client:
+        class: Symfony\Component\HttpClient\MockHttpClient
+        arguments: [[]]
+
+    # The README's runnable classes, written there by ReadmeSnippetsTest and autowired like application services.
+    HtmlTranslator\Bundle\Tests\Documentation\Readme\:
+        resource: '%kernel.project_dir%/var/readme-snippets/'
+        autowire: true
+        public: true
