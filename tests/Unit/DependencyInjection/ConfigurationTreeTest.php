@@ -376,6 +376,9 @@ final class ConfigurationTreeTest extends TestCase
     public static function invalidSections(): iterable
     {
         yield 'timeout string' => [['http' => ['timeout' => 'long']], 'Invalid type for path "html_translator.http.timeout"'];
+        yield 'empty http client' => [['http' => ['client' => '']], 'Invalid configuration for path "html_translator.http.client": a service id or ~, got an empty string'];
+        yield 'bundle http client as client' => [['http' => ['client' => 'html_translator.http_client']], 'Invalid configuration for path "html_translator.http.client": "html_translator.http_client" is a service the bundle builds on this client; name the client itself'];
+        yield 'bundle psr18 client as client' => [['http' => ['client' => 'html_translator.psr18_client']], '"html_translator.psr18_client" is a service the bundle builds on this client'];
         yield 'max_attempts 0' => [['http' => ['retry' => ['max_attempts' => 0]]], 'The value 0 is too small for path "html_translator.http.retry.max_attempts"'];
         yield 'max_attempts 11' => [['http' => ['retry' => ['max_attempts' => 11]]], 'The value 11 is too big for path "html_translator.http.retry.max_attempts"'];
         yield 'negative base delay' => [['http' => ['retry' => ['base_delay_ms' => -1]]], 'The value -1 is too small for path "html_translator.http.retry.base_delay_ms"'];
