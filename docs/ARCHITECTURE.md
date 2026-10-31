@@ -70,7 +70,7 @@ final class PageTranslator
 | `HtmlTranslator\Bundle\Options\TranslationOptionsFactory` | `create(profile:, source:, fallback:, maxCorrectiveRetries:, batchSize:, tokenBudget:, onProgress:)` — config defaults plus overrides; profile as entry name or core object, source as string or `Locale`. |
 
 ```bash
-bin/console html-translator:translate page.html --to=de --to=fr --from=en --provider=anthropic --profile=docs --output=translations/
+bin/console html-translator:translate page.html --to=de --to=fr --from=en --provider=anthropic --translation-profile=docs --output=translations/
 bin/console html-translator:check [--provider=openai] [--ping]
 bin/console debug:config html_translator
 ```

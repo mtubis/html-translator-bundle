@@ -25,7 +25,7 @@ final readonly class TranslationOptionsFactory
     /**
      * FallbackStrategy is a pure enum: the configuration names (ConfigurationTree::FALLBACKS) are mapped explicitly.
      *
-     * @internal public for the test that keeps it in step with the configuration tree
+     * @internal public for the translate command and the test that keeps it in step with the configuration tree
      */
     public const array FALLBACKS = [
         'keep_original' => FallbackStrategy::KeepOriginal,
