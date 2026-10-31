@@ -1,6 +1,7 @@
 /vendor/
 /var/
 /tests/Functional/var/
+/tests/Functional/config/reference.php
 /.phpunit.cache/
 /composer.lock
 /.env
