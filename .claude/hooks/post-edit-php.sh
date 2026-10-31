@@ -14,6 +14,15 @@ cd "$root" || exit 0
 
 vendor/bin/php-cs-fixer fix --quiet --config=.php-cs-fixer.dist.php "$file" >/dev/null 2>&1 || true
 
+# phpstan-symfony needs the dumped test container; refresh it so service changes are seen.
+if ! output="$(php tests/phpstan-container.php 2>&1)"; then
+  {
+    echo "Test kernel failed to boot (container dump for phpstan-symfony) after editing $file:"
+    echo "$output"
+  } >&2
+  exit 2
+fi
+
 if ! output="$(vendor/bin/phpstan analyse --no-progress --error-format=raw --memory-limit=1G "$file" 2>&1)"; then
   {
     echo "PHPStan found problems in $file:"

@@ -63,6 +63,19 @@ final class TestKernel extends Kernel
         return __DIR__ . '/var/log';
     }
 
+    /**
+     * Fixtures are loaded explicitly from tests/Functional/config. Pointing the kernel's config dir elsewhere (a path
+     * that does not exist) keeps FrameworkBundle from dumping its generated config/reference.php among the fixtures.
+     *
+     * Not a documented extension point: the original is a private method of the kernel traits (MicroKernelTrait in
+     * 7.4, KernelTrait in 8.1), and this method replaces it because a class method takes precedence over a trait
+     * method. TestKernelTest guards against a Symfony refactor silently undoing it.
+     */
+    private function getConfigDir(): string
+    {
+        return $this->getCacheDir() . '/config';
+    }
+
     protected function configureContainer(ContainerBuilder $container, LoaderInterface $loader): void
     {
         $container->loadFromExtension('framework', [

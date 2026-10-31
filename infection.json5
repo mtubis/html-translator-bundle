@@ -1,15 +1,7 @@
 {
     "$schema": "vendor/infection/infection/resources/schema.json",
     "source": {
-        "directories": ["src"],
-        "excludes": [
-            // Test infrastructure shipped for adapter authors, not production code.
-            "Provider/Llm/Testing/ChatModelContractTestCase.php",
-            "Provider/Llm/Testing/ChatScenario.php",
-            "Provider/Llm/Testing/ChatScenarioKind.php",
-            "Provider/Llm/Testing/RecordedChatRequest.php",
-            "Provider/Testing/TranslationProviderContractTestCase.php"
-        ]
+        "directories": ["src"]
     },
     "phpUnit": {
         "customPath": "vendor/bin/phpunit"

@@ -23,7 +23,6 @@ final class HtmlTranslatorBundle extends AbstractBundle
     public function configure(DefinitionConfigurator $definition): void
     {
         // Intentionally empty until issue "Configuration tree": every key of docs/config-reference.yaml goes here.
-        $definition->rootNode();
     }
 
     /**
