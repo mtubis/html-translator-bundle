@@ -174,13 +174,11 @@ final class HtmlTranslatorDataCollector extends AbstractDataCollector
             return $error::class;
         }
 
-        $message = $error->getMessage();
-
-        return $error::class . ': ' . (mb_strlen($message) > self::ERROR_LENGTH ? mb_substr($message, 0, self::ERROR_LENGTH - 1) . '…' : $message);
+        return $error::class . ': ' . $this->truncate($error->getMessage(), self::ERROR_LENGTH);
     }
 
-    private function truncate(string $text): string
+    private function truncate(string $text, int $length = self::PREVIEW_LENGTH): string
     {
-        return mb_strlen($text) > self::PREVIEW_LENGTH ? mb_substr($text, 0, self::PREVIEW_LENGTH - 1) . '…' : $text;
+        return mb_strlen($text) > $length ? mb_substr($text, 0, $length - 1) . '…' : $text;
     }
 }
