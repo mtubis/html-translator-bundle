@@ -17,4 +17,4 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 
 $files = array_values(array_filter(explode(',', (string) getenv('HTML_TRANSLATOR_TEST_CONFIG'))));
 
-exit(new Application(new TestKernel($files, environment: 'dev'))->run());
+exit(new Application(new TestKernel([] === $files ? [TestKernel::DEFAULT_CONFIG] : $files, environment: 'dev'))->run());

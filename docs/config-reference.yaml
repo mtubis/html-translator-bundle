@@ -1,8 +1,10 @@
 # Specification of the bundle configuration (config/packages/html_translator.yaml).
 #
 # The bundle's configuration tree (HtmlTranslatorBundle::configure()) is built from this file; `bin/console
-# config:dump-reference html_translator` must print the same keys, defaults and comments. Values that come from
-# %env()% are resolved at runtime and validated when the service is first created (ADR-0004).
+# config:dump-reference html_translator` prints the same keys (snapshot: tests/Functional/snapshots/). Per-driver
+# defaults (corrupt_every: 0, refusal_fallbacks: false, base URLs, ...) are applied when the provider is created, so
+# the dump shows ~ for them. Values that come from %env()% are resolved at runtime and validated when the service is
+# first created (ADR-0004).
 
 html_translator:
 

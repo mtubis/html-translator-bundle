@@ -1,0 +1,6 @@
+# Scenario fixture (the TestKernel default): one provider without network access.
+html_translator:
+    default_provider: pseudo
+    providers:
+        pseudo:
+            driver: pseudo

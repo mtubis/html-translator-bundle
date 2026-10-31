@@ -22,12 +22,15 @@ final class TestKernel extends Kernel
 {
     use MicroKernelTrait;
 
+    /** The scenario without config files of its own: the bundle needs at least one provider. */
+    public const string DEFAULT_CONFIG = 'pseudo.yaml';
+
     /**
      * @param list<string> $configFiles paths relative to tests/Functional/config
      * @param list<class-string<BundleInterface>> $extraBundles e.g. MonologBundle, WebProfilerBundle
      */
     public function __construct(
-        private readonly array $configFiles = [],
+        private readonly array $configFiles = [self::DEFAULT_CONFIG],
         private readonly array $extraBundles = [],
         string $environment = 'test',
         bool $debug = true,

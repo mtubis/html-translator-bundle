@@ -33,6 +33,10 @@ abstract class FunctionalTestCase extends KernelTestCase
      */
     private static function configFiles(array $options): array
     {
+        if (!\array_key_exists('config', $options)) {
+            return [TestKernel::DEFAULT_CONFIG];
+        }
+
         $files = [];
 
         foreach ((array) ($options['config'] ?? []) as $file) {

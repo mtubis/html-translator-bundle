@@ -1,0 +1,9 @@
+# Scenario fixture: an enum key from env, which the configuration tree cannot check and therefore rejects.
+html_translator:
+    default_provider: openai
+    providers:
+        openai:
+            driver: openai
+            api_key: '%env(HTML_TRANSLATOR_TEST_API_KEY)%'
+            model: gpt-test
+            json_mode: '%env(HTML_TRANSLATOR_TEST_JSON_MODE)%'

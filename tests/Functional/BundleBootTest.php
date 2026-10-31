@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace HtmlTranslator\Bundle\Tests\Functional;
 
+use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
+use HtmlTranslator\Bundle\Drivers;
 use HtmlTranslator\Bundle\HtmlTranslatorBundle;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
 #[CoversClass(HtmlTranslatorBundle::class)]
+#[UsesClass(ConfigurationTree::class)]
+#[UsesClass(Drivers::class)]
 final class BundleBootTest extends FunctionalTestCase
 {
     #[Test]
@@ -29,10 +35,11 @@ final class BundleBootTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function it_accepts_an_empty_configuration(): void
+    public function it_rejects_a_configuration_without_providers(): void
     {
-        $kernel = self::bootKernel(['config' => ['empty.yaml']]);
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('The child config "providers" under "html_translator" must be configured');
 
-        self::assertTrue($kernel->getContainer()->has('kernel'));
+        self::bootKernel(['config' => ['empty.yaml']]);
     }
 }
