@@ -1,0 +1,24 @@
+# Scenario fixture for tests/Integration: real APIs, keys and models from env (see .env.dist).
+html_translator:
+    default_provider: openai
+    providers:
+        openai:
+            driver: openai
+            api_key: '%env(OPENAI_API_KEY)%'
+            model: '%env(HTML_TRANSLATOR_OPENAI_MODEL)%'
+        anthropic:
+            driver: anthropic
+            api_key: '%env(ANTHROPIC_API_KEY)%'
+            model: '%env(HTML_TRANSLATOR_ANTHROPIC_MODEL)%'
+        gemini:
+            driver: gemini
+            api_key: '%env(GEMINI_API_KEY)%'
+            model: '%env(HTML_TRANSLATOR_GEMINI_MODEL)%'
+
+# Test-only translators on the provider services; issue #4 adds the bundle's own translator services.
+services:
+    _defaults:
+        public: true
+    test.translator.openai: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.openai'] }
+    test.translator.anthropic: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.anthropic'] }
+    test.translator.gemini: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.gemini'] }

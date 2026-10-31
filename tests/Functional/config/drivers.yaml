@@ -1,0 +1,55 @@
+# Scenario fixture: one entry per LLM driver, all sending through a MockHttpClient (http.client).
+html_translator:
+    default_provider: openai
+    http:
+        client: test.mock_http_client
+        retry:
+            base_delay_ms: 0
+            max_delay_ms: 0
+    providers:
+        openai:
+            driver: openai
+            api_key: test-openai-key
+            model: gpt-test
+        gemini:
+            driver: gemini
+            api_key: test-gemini-key
+            model: gemini-test
+        ollama:
+            driver: ollama
+            model: llama-test
+        vllm:
+            driver: vllm
+            model: vllm-test
+            api_key: test-vllm-key
+        lm_studio:
+            driver: lm_studio
+            model: lmstudio-test
+        together:
+            driver: openai_compatible
+            base_url: https://api.together.xyz/v1
+            api_key: test-together-key
+            model: together-test
+            extra_headers:
+                X-Team: translations
+                X-Run: functional-test
+        anthropic:
+            driver: anthropic
+            api_key: test-anthropic-key
+            model: claude-test
+
+services:
+    test.mock_http_client:
+        class: Symfony\Component\HttpClient\MockHttpClient
+        public: true
+
+    # Test-only translators on the provider services; issue #4 adds the bundle's own translator services.
+    _defaults:
+        public: true
+    test.translator.openai: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.openai'] }
+    test.translator.gemini: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.gemini'] }
+    test.translator.ollama: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.ollama'] }
+    test.translator.vllm: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.vllm'] }
+    test.translator.lm_studio: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.lm_studio'] }
+    test.translator.together: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.together'] }
+    test.translator.anthropic: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.anthropic'] }

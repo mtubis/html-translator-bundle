@@ -27,6 +27,15 @@ abstract class FunctionalTestCase extends KernelTestCase
     }
 
     /**
+     * A service defined by the scenario's config fixture. PHPStan analyses with the default scenario's container,
+     * which does not know these ids.
+     */
+    protected static function scenarioService(string $id): object
+    {
+        return self::getContainer()->get($id);
+    }
+
+    /**
      * @param array<array-key, mixed> $options
      *
      * @return list<string>

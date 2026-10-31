@@ -52,7 +52,7 @@ html_translator:
             # anthropic: max_tokens when a request sets no limit; ~ = the adapter's default.
             default_max_output_tokens: ~
 
-            # pseudo: 0 = never (default); n >= 1: break every n-th unit, to exercise fallbacks.
+            # pseudo: 0 = never (default); n >= 1: break every n-th unit, to exercise fallbacks. A literal value: env placeholders are not supported here.
             corrupt_every:        ~
 
             # pseudo: true keeps corrupted units broken in corrective retries too (default false).
@@ -61,7 +61,7 @@ html_translator:
     # HTTP: a scoped client of FrameworkBundle's http_client, wrapped as PSR-18 (ADR-0003). Retries are the core's; do not add retry_failed to this client.
     http:
 
-        # Service id of an HttpClientInterface; ~ = a scoped client the bundle creates.
+        # Service id of an HttpClientInterface, used as is; ~ = a scoped client the bundle creates. A literal value: env placeholders are not supported here.
         client:               null
 
         # Idle timeout in seconds; translation batches can take a while. From env: '%env(float:HTML_TRANSLATOR_HTTP_TIMEOUT)%'.
@@ -73,13 +73,13 @@ html_translator:
         # The core RetryPolicy.
         retry:
 
-            # Calls in total, the first included; 1 disables retries.
+            # Calls in total, the first included; 1 disables retries. A literal value: env placeholders are not supported here.
             max_attempts:         3
 
-            # Wait before the first retry, doubling per retry (with jitter).
+            # Wait before the first retry, doubling per retry (with jitter). A literal value: env placeholders are not supported here.
             base_delay_ms:        1000
 
-            # Upper bound of a single wait, also for Retry-After.
+            # Upper bound of a single wait, also for Retry-After. A literal value: env placeholders are not supported here.
             max_delay_ms:         30000
 
             # Retry network errors (no response at all).

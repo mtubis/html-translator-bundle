@@ -1,0 +1,26 @@
+# Scenario fixture: the default HTTP path, FrameworkBundle's http_client scoped by the bundle (ADR-0003). The
+# framework client answers with a canned response, as an application's tests would configure it.
+framework:
+    http_client:
+        mock_response_factory: test.mock_response
+
+html_translator:
+    default_provider: ollama
+    http:
+        timeout: 42
+        max_duration: 99
+    providers:
+        ollama:
+            driver: ollama
+            model: llama-test
+
+services:
+    test.mock_response:
+        class: Symfony\Component\HttpClient\Response\MockResponse
+        factory: ['HtmlTranslator\Bundle\Tests\Functional\Fixtures\VendorResponses', 'openAiCompatibleSuccess']
+        public: true
+    # Test-only translator on the provider service; issue #4 adds the bundle's own translator services.
+    test.translator.ollama:
+        class: HtmlTranslator\HtmlTranslator
+        public: true
+        arguments: ['@html_translator.provider.ollama']
