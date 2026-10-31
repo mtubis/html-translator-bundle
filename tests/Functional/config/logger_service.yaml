@@ -1,0 +1,5 @@
+# Scenario fixture, on top of logging.yaml: the "logger" service of an application without MonologBundle.
+services:
+    logger:
+        class: HtmlTranslator\Bundle\Tests\Functional\Fixtures\RecordingLogger
+        public: true

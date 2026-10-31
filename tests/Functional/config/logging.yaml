@@ -1,0 +1,10 @@
+# Scenario fixture: a provider that breaks every unit, so the core logs an issue per translation.
+html_translator:
+    # Corrupted units must reach the provider each time; a cached clean unit would hide the issue.
+    cache:
+        enabled: false
+    default_provider: broken
+    providers:
+        broken:
+            driver: pseudo
+            corrupt_every: 1

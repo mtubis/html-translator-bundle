@@ -1,0 +1,4 @@
+# Scenario fixture, on top of pseudo.yaml: no unit cache.
+html_translator:
+    cache:
+        enabled: false
