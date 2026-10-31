@@ -6,6 +6,7 @@ namespace HtmlTranslator\Bundle\Tests\Integration;
 
 use HtmlTranslator\Bundle\ChatModel\ChatModelFactory;
 use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
+use HtmlTranslator\Bundle\DependencyInjection\ProfilerDefinitions;
 use HtmlTranslator\Bundle\DependencyInjection\ProviderDefinitions;
 use HtmlTranslator\Bundle\DependencyInjection\TranslatorDefinitions;
 use HtmlTranslator\Bundle\Drivers;
@@ -35,6 +36,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 #[UsesClass(Drivers::class)]
 #[UsesClass(HtmlRulesFactory::class)]
 #[UsesClass(TranslatorDefinitions::class)]
+#[UsesClass(ProfilerDefinitions::class)]
 final class ProviderIntegrationTest extends FunctionalTestCase
 {
     /**

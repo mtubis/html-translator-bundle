@@ -6,6 +6,7 @@ namespace HtmlTranslator\Bundle\Tests\Functional;
 
 use HtmlTranslator\Bundle\ChatModel\ChatModelFactory;
 use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
+use HtmlTranslator\Bundle\DependencyInjection\ProfilerDefinitions;
 use HtmlTranslator\Bundle\DependencyInjection\ProviderDefinitions;
 use HtmlTranslator\Bundle\DependencyInjection\TranslatorDefinitions;
 use HtmlTranslator\Bundle\Drivers;
@@ -32,6 +33,7 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 #[UsesClass(Drivers::class)]
 #[UsesClass(HtmlRulesFactory::class)]
 #[UsesClass(TranslatorDefinitions::class)]
+#[UsesClass(ProfilerDefinitions::class)]
 #[UsesClass(ChatModelFactory::class)]
 #[UsesClass(HttpClientFactory::class)]
 #[UsesClass(BundleInvalidConfigurationException::class)]

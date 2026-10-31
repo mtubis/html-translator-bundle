@@ -24,7 +24,6 @@ use HtmlTranslator\Provider\TranslationBatch;
 use HtmlTranslator\Provider\TranslationProviderInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use RuntimeException;
@@ -36,7 +35,6 @@ use Symfony\Component\HttpFoundation\Response;
 #[CoversClass(HtmlTranslatorDataCollector::class)]
 #[CoversClass(BatchRecord::class)]
 #[CoversClass(UnitPreview::class)]
-#[UsesClass(LogicException::class)]
 final class TraceableTranslationProviderTest extends TestCase
 {
     #[Test]

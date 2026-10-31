@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace HtmlTranslator\Bundle\Tests\Functional;
 
 use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
+use HtmlTranslator\Bundle\DependencyInjection\ProfilerDefinitions;
 use HtmlTranslator\Bundle\DependencyInjection\ProviderDefinitions;
 use HtmlTranslator\Bundle\DependencyInjection\TranslatorDefinitions;
 use HtmlTranslator\Bundle\Drivers;
@@ -25,6 +26,7 @@ use Symfony\Component\Console\Tester\CommandTester;
 #[UsesClass(Drivers::class)]
 #[UsesClass(HtmlRulesFactory::class)]
 #[UsesClass(TranslatorDefinitions::class)]
+#[UsesClass(ProfilerDefinitions::class)]
 #[UsesClass(ProviderDefinitions::class)]
 final class ConfigDumpReferenceTest extends FunctionalTestCase
 {
