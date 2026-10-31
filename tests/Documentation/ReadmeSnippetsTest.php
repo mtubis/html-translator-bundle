@@ -6,35 +6,53 @@ namespace HtmlTranslator\Bundle\Tests\Documentation;
 
 use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
 use HtmlTranslator\Bundle\Tests\Functional\FunctionalTestCase;
-use HtmlTranslator\Bundle\TranslatorRegistry;
-use HtmlTranslator\HtmlTranslator;
+use Override;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
-use ReflectionClass;
 use ReflectionMethod;
-use ReflectionNamedType;
-use ReflectionParameter;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\Processor;
-use Symfony\Component\DependencyInjection\Attribute\Target;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml\Yaml;
 
 /**
- * Runs the README, so the documentation cannot rot. A PHP block after `<!-- runnable: Class::method -->` is an
- * application class: it is loaded in its own namespace, built with the container's autowiring rules (#[Target], the
- * type) in a kernel whose providers are all offline, and the method is called with a sample page. Every YAML block
- * with html_translator configuration is processed by the configuration tree.
+ * Runs the README, so the documentation cannot rot.
+ *
+ * - A PHP block after `<!-- runnable: Class::method -->` is an application class: it is registered as an autowired
+ *   service of a kernel whose providers are all offline (tests/Functional/config/readme.yaml), fetched from the
+ *   container and the method is called with a sample page.
+ * - Every YAML block with html_translator configuration (also under when@test) goes through the configuration tree.
+ * - Every option of the html-translator commands shown in a bash block exists.
  */
 #[CoversNothing]
 final class ReadmeSnippetsTest extends FunctionalTestCase
 {
     private const string README = __DIR__ . '/../../README.md';
 
+    private const string NAMESPACE = 'HtmlTranslator\Bundle\Tests\Documentation\Readme';
+
+    private const string SNIPPETS = __DIR__ . '/../Functional/var/readme-snippets';
+
     private const string HTML = '<h1>Getting started</h1><p>Install the <strong>bundle</strong> first.</p>';
 
     /** The providers every YAML block is merged with, so a block may show one section only. */
     private const array BASE = ['default_provider' => 'openai', 'providers' => ['openai' => ['driver' => 'pseudo']]];
+
+    #[Override]
+    public static function setUpBeforeClass(): void
+    {
+        // The container finds the classes through the resource directory, and PHP through these files.
+        new Filesystem()->remove(self::SNIPPETS);
+        foreach (self::phpSnippets() as [$class, , $code]) {
+            $file = self::SNIPPETS . '/' . $class . '.php';
+            new Filesystem()->dumpFile($file, "<?php\n\ndeclare(strict_types=1);\n\nnamespace " . self::NAMESPACE . ";\n\n" . $code);
+            if (!class_exists(self::NAMESPACE . '\\' . $class, false)) {
+                require $file;
+            }
+        }
+    }
 
     /**
      * @return iterable<string, array{string, string, string}>
@@ -48,62 +66,78 @@ final class ReadmeSnippetsTest extends FunctionalTestCase
     }
 
     /**
-     * @return iterable<string, array{string}>
+     * @return iterable<string, array{array<array-key, mixed>}>
      */
     public static function yamlSnippets(): iterable
     {
         preg_match_all('/^```yaml\n(.*?)^```$/ms', self::readme(), $matches);
         foreach ($matches[1] as $index => $yaml) {
-            if (str_contains($yaml, 'html_translator:')) {
-                yield \sprintf('#%d %s', $index + 1, strtok($yaml, "\n")) => [$yaml];
+            $parsed = Yaml::parse($yaml);
+            if (!\is_array($parsed)) {
+                continue;
+            }
+
+            $test = $parsed['when@test'] ?? null;
+            foreach (['' => $parsed['html_translator'] ?? null, ' when@test' => \is_array($test) ? $test['html_translator'] ?? null : null] as $scope => $config) {
+                if (\is_array($config)) {
+                    yield \sprintf('#%d%s', $index + 1, $scope) => [$config];
+                }
             }
         }
     }
 
-    #[Test]
-    public function it_finds_a_php_block_after_every_runnable_marker(): void
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function commandOptions(): iterable
     {
-        $markers = substr_count(self::readme(), '<!-- runnable');
+        preg_match_all('/^```bash\n(.*?)^```$/ms', self::readme(), $blocks);
+        // Joined continuation lines, then every "html-translator:<name> …" call with its long options.
+        preg_match_all('/html-translator:([\w-]+)([^\n|>]*)/', str_replace("\\\n", ' ', implode("\n", $blocks[1])), $calls, \PREG_SET_ORDER);
+        $cases = [];
+        foreach ($calls as [, $command, $arguments]) {
+            preg_match_all('/--([\w-]+)/', $arguments, $options);
+            foreach ($options[1] as $option) {
+                $cases[$command . ' --' . $option] = ['html-translator:' . $command, $option];
+            }
+        }
 
-        self::assertSame(3, $markers);
-        self::assertCount($markers, iterator_to_array(self::phpSnippets()));
-        self::assertCount(3, iterator_to_array(self::yamlSnippets()));
+        yield from $cases;
+    }
+
+    #[Test]
+    public function it_marks_every_php_block_as_runnable(): void
+    {
+        $readme = self::readme();
+
+        self::assertSame(substr_count($readme, "\n```php\n"), substr_count($readme, '<!-- runnable'));
+        self::assertCount(substr_count($readme, '<!-- runnable'), iterator_to_array(self::phpSnippets()));
+        self::assertNotSame([], iterator_to_array(self::yamlSnippets()));
+        self::assertNotSame([], iterator_to_array(self::commandOptions()));
     }
 
     #[Test]
     #[DataProvider('phpSnippets')]
     public function it_runs_a_php_snippet(string $class, string $method, string $code): void
     {
-        $namespace = 'HtmlTranslator\Bundle\Tests\Documentation\Readme\\' . $class;
-        $file = (string) tempnam(sys_get_temp_dir(), 'readme-snippet');
-        file_put_contents($file, "<?php\n\ndeclare(strict_types=1);\n\nnamespace " . $namespace . ";\n\n" . $code);
-
-        try {
-            require_once $file;
-        } finally {
-            unlink($file);
-        }
-
         self::bootKernel(['config' => ['readme.yaml']]);
-        $fqcn = $namespace . '\\' . $class;
-        self::assertTrue(class_exists($fqcn));
-        $object = new ReflectionClass($fqcn)->newInstanceArgs(array_map($this->resolve(...), new ReflectionClass($fqcn)->getConstructor()?->getParameters() ?? []));
+        $service = self::scenarioService(self::NAMESPACE . '\\' . $class);
 
-        $result = new ReflectionMethod($object, $method)->invoke($object, self::HTML);
+        $result = new ReflectionMethod($service, $method)->invoke($service, self::HTML);
 
         self::assertIsString($result);
         self::assertStringContainsString('<h1>', $result);
+        // The pseudo driver changes every text: the original back would mean the translation failed.
+        self::assertNotSame(self::HTML, $result);
     }
 
+    /**
+     * @param array<array-key, mixed> $config
+     */
     #[Test]
     #[DataProvider('yamlSnippets')]
-    public function it_processes_a_yaml_snippet(string $yaml): void
+    public function it_processes_a_yaml_snippet(array $config): void
     {
-        $parsed = Yaml::parse($yaml);
-        self::assertIsArray($parsed);
-        $config = $parsed['html_translator'] ?? $this->section($parsed, 'when@test');
-        self::assertIsArray($config);
-
         $treeBuilder = new TreeBuilder('html_translator');
         ConfigurationTree::define($treeBuilder->getRootNode());
         $processed = new Processor()->process($treeBuilder->buildTree(), [self::BASE, $config]);
@@ -111,33 +145,13 @@ final class ReadmeSnippetsTest extends FunctionalTestCase
         self::assertArrayHasKey('providers', $processed);
     }
 
-    /**
-     * Autowiring as the container does it for an application service: #[Target] picks the named translator, any
-     * other HtmlTranslator is the default one, and other types are public services of the bundle.
-     */
-    private function resolve(ReflectionParameter $parameter): object
+    #[Test]
+    #[DataProvider('commandOptions')]
+    public function it_shows_only_options_the_commands_have(string $command, string $option): void
     {
-        $type = $parameter->getType();
-        self::assertInstanceOf(ReflectionNamedType::class, $type);
-        $translators = self::getContainer()->get(TranslatorRegistry::class);
+        $definition = new Application(self::bootKernel())->find($command)->getDefinition();
 
-        if (HtmlTranslator::class === $type->getName()) {
-            $target = $parameter->getAttributes(Target::class)[0] ?? null;
-
-            return $translators->get($target?->newInstance()->name);
-        }
-
-        return self::scenarioService($type->getName());
-    }
-
-    /**
-     * @param array<array-key, mixed> $parsed
-     */
-    private function section(array $parsed, string $key): mixed
-    {
-        $section = $parsed[$key] ?? null;
-
-        return \is_array($section) ? $section['html_translator'] ?? null : null;
+        self::assertTrue($definition->hasOption($option), \sprintf('%s has no --%s.', $command, $option));
     }
 
     private static function readme(): string

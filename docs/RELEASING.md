@@ -8,8 +8,9 @@ public API (ARCHITECTURE §4), and the CHANGELOG says how. Releases are cut from
 1. **Green build**: `main` is up to date and `composer check` passes locally and in CI (all jobs, lowest dependencies
    and mutation testing included).
 2. **Real APIs**: `set -a; . ./.env; set +a; composer test:integration` passes with keys for at least one
-   OpenAI-compatible provider and Anthropic (it costs a few tokens; see `.env.dist`; ollama runs only with a local
-   server).
+   OpenAI-compatible provider and Anthropic (it costs a few tokens; see `.env.dist`; each provider without its
+   variables is skipped; ollama needs a local `ollama serve`, and `OLLAMA_BASE_URL` must end with `/v1`, the
+   OpenAI-compatible API, or the requests fail with 404).
 3. **Documentation**: the README snippets are tested (`composer test` includes `tests/Documentation`); check that the
    README's providers table and [config-reference.yaml](config-reference.yaml) match the release.
 4. **CHANGELOG**: move the entries of `[Unreleased]` into a new `## [X.Y.Z] - YYYY-MM-DD` section (the tag date), with
@@ -25,9 +26,10 @@ public API (ARCHITECTURE §4), and the CHANGELOG says how. Releases are cut from
 
 ```bash
 git switch main && git pull
+git log -1 --oneline        # the merge commit of the release pull request
 git tag -a vX.Y.Z -m "X.Y.Z"
 git push origin vX.Y.Z
-gh release create vX.Y.Z --title "X.Y.Z" \
+gh release create vX.Y.Z --verify-tag --title "X.Y.Z" \
     --notes "$(awk '/^## \[X.Y.Z\]/{f=1;next} f&&/^(## \[|\[[^]]+\]: )/{exit} f' CHANGELOG.md)"
 ```
 
@@ -42,7 +44,7 @@ gh release create vX.Y.Z --title "X.Y.Z" \
 2. **Submit** `https://github.com/mtubis/html-translator-bundle`; the package name comes from `composer.json`
    (`mtubis/html-translator-bundle`).
 3. Enable automatic updates (the GitHub hook, or the Packagist GitHub app) so later tags appear without a manual update.
-4. Check that `composer require mtubis/html-translator-bundle` resolves `v0.1.0` in a fresh Symfony 7.4 and 8.1
-   application (`symfony new app --webapp`), and that `bin/console html-translator:check` and the profiler panel work
-   there. Before the recipe is merged, `composer require` asks to run a contrib recipe only once it exists; until then
-   configure as described in the README ("Without Flex").
+4. Check that `composer require mtubis/html-translator-bundle` resolves `v0.1.0` in fresh Symfony applications
+   (`symfony new app --webapp --version=7.4` and `--version=8.1`), and that `bin/console html-translator:check` and the
+   profiler panel work there. Until the recipe is merged in recipes-contrib, `composer require` installs no recipe:
+   configure as described in the README ("Without Flex"); afterwards Flex asks before running the contrib recipe.

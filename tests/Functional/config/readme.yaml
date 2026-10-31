@@ -17,3 +17,9 @@ services:
     test.no_http_client:
         class: Symfony\Component\HttpClient\MockHttpClient
         arguments: [[]]
+
+    # The README's runnable classes, written there by ReadmeSnippetsTest and autowired like application services.
+    HtmlTranslator\Bundle\Tests\Documentation\Readme\:
+        resource: '%kernel.project_dir%/var/readme-snippets/'
+        autowire: true
+        public: true

@@ -21,8 +21,8 @@ final class RecipeTest extends TestCase
 {
     private const string RECIPE = __DIR__ . '/../../docs/recipe/mtubis/html-translator-bundle/0.1';
 
-    /** The manifest keys a recipes-contrib recipe of this kind may use. */
-    private const array MANIFEST_KEYS = ['bundles', 'copy-from-recipe', 'env', 'aliases', 'post-install-output'];
+    /** The manifest keys this contrib recipe uses (post-install output comes from post-install.txt). */
+    private const array MANIFEST_KEYS = ['bundles', 'copy-from-recipe', 'env'];
 
     #[Test]
     public function it_uses_only_known_manifest_keys(): void

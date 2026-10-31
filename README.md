@@ -21,8 +21,9 @@ translates uncached); TwigBundle and WebProfilerBundle are only needed for the p
 composer require mtubis/html-translator-bundle
 ```
 
-With Symfony Flex the recipe enables the bundle, creates `config/packages/html_translator.yaml` (OpenAI by default, the
-offline `pseudo` driver in tests) and adds the variables to `.env`:
+Once the recipe is in [symfony/recipes-contrib](https://github.com/symfony/recipes-contrib), Symfony Flex (after you
+accept the contrib recipe) enables the bundle, creates `config/packages/html_translator.yaml` (OpenAI by default, the
+offline `pseudo` driver in tests) and adds the variables to `.env`; until then, configure it as described below:
 
 ```dotenv
 OPENAI_API_KEY=
@@ -163,7 +164,7 @@ final readonly class DocsTranslator
 | `openai` | `OpenAiCompatibleConfig::openAi()` (json_schema) | `https://api.openai.com/v1` | Bearer | `api_key`, `model` | `OPENAI_API_KEY`, `HTML_TRANSLATOR_OPENAI_MODEL` |
 | `gemini` | `OpenAiCompatibleConfig::gemini()` | Gemini's OpenAI-compatible endpoint | Bearer | `api_key`, `model` | `GEMINI_API_KEY`, `HTML_TRANSLATOR_GEMINI_MODEL` |
 | `anthropic` | `AnthropicConfig` | `https://api.anthropic.com/v1` | `x-api-key` | `api_key`, `model` | `ANTHROPIC_API_KEY`, `HTML_TRANSLATOR_ANTHROPIC_MODEL` |
-| `ollama` | `OpenAiCompatibleConfig::ollama()` | `http://localhost:11434/v1` | none | `model` | `HTML_TRANSLATOR_OLLAMA_MODEL` |
+| `ollama` | `OpenAiCompatibleConfig::ollama()` | `http://localhost:11434/v1` (keep the `/v1`) | none | `model` | `HTML_TRANSLATOR_OLLAMA_MODEL` |
 | `vllm` | `OpenAiCompatibleConfig::vllm()` | `http://localhost:8000/v1` | optional Bearer | `model` | |
 | `lm_studio` | `OpenAiCompatibleConfig::lmStudio()` | `http://localhost:1234/v1` | none | `model` | |
 | `openai_compatible` | `new OpenAiCompatibleConfig()` | your server | optional Bearer, `extra_headers` | `base_url`, `model` | |
@@ -179,7 +180,7 @@ when the container is compiled.
 
 - **HTTP**: the bundle scopes FrameworkBundle's `http_client` with `http.timeout` (from env:
   `'%env(float:HTML_TRANSLATOR_HTTP_TIMEOUT)%'`) and `http.max_duration`, so requests appear in the profiler; or set
-  `http.client` to a service id of your own. `max_duration: ~` means no limit and overrides a `max_duration` in
+  `http.client` to a service id of your own, which is used as is (the timeouts above are not applied to it). `max_duration: ~` means no limit and overrides a `max_duration` in
   `framework.http_client.default_options`.
 - **Retries** are the core `Retrier`'s, configured by `http.retry` (429, 5xx, network errors, `Retry-After`). Do **not**
   add `retry_failed` to `framework.http_client.default_options`: the bundle's client inherits it and every request
@@ -200,7 +201,9 @@ bin/console html-translator:check [--provider=openai] [--ping]
 ```
 
 `translate` writes the HTML to STDOUT (one target) or to files (`--output` as a file, a directory, or a path with
-`{locale}`), progress and a summary per locale to STDERR, and exits with 1 when a document is incomplete. The profile
+`{locale}`; several targets without `--output` go next to the input as `page.<locale>.html`), progress and a summary
+per locale to STDERR, and exits with 1 when a document is incomplete. `--fallback` overrides `options.fallback`
+(`keep_original`, `text_nodes_only`, `throw`). The profile
 option is `--translation-profile`, because FrameworkBundle reserves `--profile` for command profiling. `check` reports
 every runtime configuration problem in one run; `--ping` also translates `<p>ok</p>` once per provider (a few tokens).
 
@@ -227,11 +230,12 @@ when@test:
                 driver: pseudo
 ```
 
-An entry in a later file replaces the earlier one as a whole, so `when@test` can also switch a single entry, e.g.
-`providers: { openai: { driver: pseudo } }`. `corrupt_every: 1` (with `corrupt_retries: true`) breaks every unit, to
-test how your code handles incomplete documents. To test the real request, keep the driver and answer with Symfony's
-`MockHttpClient`: set `framework.http_client.mock_response_factory`, or point `http.client` at a `MockHttpClient`
-service.
+An entry in a later file or a `when@<env>` block replaces the earlier one as a whole, so `when@test` can also switch a
+single entry, e.g. `providers: { openai: { driver: pseudo } }` (what the recipe does). `corrupt_every: 1` (with `corrupt_retries: true`) breaks every unit, to
+test how your code handles incomplete documents. To test the real request, keep the driver (remove the recipe's `when@test`
+override for that entry), give it a dummy key in `.env.test` (an empty key fails before any request) and answer with
+Symfony's `MockHttpClient`: set `framework.http_client.mock_response_factory`, or point `http.client` at a
+`MockHttpClient` service.
 
 ## Errors and secrets
 
@@ -239,7 +243,8 @@ Problems the configuration tree can see fail at `cache:clear` with Symfony's pat
 from env are checked on first use and raise `HtmlTranslator\Bundle\Exception\InvalidConfigurationException`, which
 implements the core `TranslatorException` and names the config path, e.g.
 `html_translator.providers.openai.api_key: is empty; the reference configuration reads it from OPENAI_API_KEY`.
-Messages never quote values.
+A variable that is not defined at all raises Symfony's `EnvNotFoundException` instead. Messages never quote API keys
+or header values.
 
 Keep API keys in env variables or [Symfony secrets](https://symfony.com/doc/current/configuration/secrets.html)
 (`bin/console secrets:set OPENAI_API_KEY`): a literal key in YAML ends up in the compiled container.
