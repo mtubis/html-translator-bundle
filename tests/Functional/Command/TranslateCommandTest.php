@@ -51,15 +51,21 @@ final class TranslateCommandTest extends FunctionalTestCase
 
     private string $dir;
 
+    private string $cwd;
+
     #[Override]
     protected function setUp(): void
     {
         $this->dir = __DIR__ . '/../var/console/' . bin2hex(random_bytes(4));
         new Filesystem()->dumpFile($this->dir . '/page.html', self::HTML);
+        // Relative paths (and the files a broken command might write) stay in the test directory.
+        $this->cwd = (string) getcwd();
+        chdir($this->dir);
     }
 
     protected function tearDown(): void
     {
+        chdir($this->cwd);
         new Filesystem()->remove($this->dir);
         parent::tearDown();
     }
