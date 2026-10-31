@@ -1,5 +1,8 @@
 # Scenario fixture: one entry per LLM driver, all sending through a MockHttpClient (http.client).
 html_translator:
+    # Every translation must reach the HTTP client; the unit cache would answer repeated ones.
+    cache:
+        enabled: false
     default_provider: openai
     http:
         client: test.mock_http_client
@@ -42,14 +45,3 @@ services:
     test.mock_http_client:
         class: Symfony\Component\HttpClient\MockHttpClient
         public: true
-
-    # Test-only translators on the provider services; issue #4 adds the bundle's own translator services.
-    _defaults:
-        public: true
-    test.translator.openai: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.openai'] }
-    test.translator.gemini: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.gemini'] }
-    test.translator.ollama: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.ollama'] }
-    test.translator.vllm: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.vllm'] }
-    test.translator.lm_studio: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.lm_studio'] }
-    test.translator.together: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.together'] }
-    test.translator.anthropic: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.anthropic'] }

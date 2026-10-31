@@ -6,7 +6,9 @@ namespace HtmlTranslator\Bundle\Tests\Functional;
 
 use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
 use HtmlTranslator\Bundle\DependencyInjection\ProviderDefinitions;
+use HtmlTranslator\Bundle\DependencyInjection\TranslatorDefinitions;
 use HtmlTranslator\Bundle\Drivers;
+use HtmlTranslator\Bundle\Html\HtmlRulesFactory;
 use HtmlTranslator\Bundle\HtmlTranslatorBundle;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -21,6 +23,8 @@ use Symfony\Component\Console\Tester\CommandTester;
 #[CoversClass(HtmlTranslatorBundle::class)]
 #[CoversClass(ConfigurationTree::class)]
 #[UsesClass(Drivers::class)]
+#[UsesClass(HtmlRulesFactory::class)]
+#[UsesClass(TranslatorDefinitions::class)]
 #[UsesClass(ProviderDefinitions::class)]
 final class ConfigDumpReferenceTest extends FunctionalTestCase
 {

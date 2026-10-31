@@ -1,0 +1,21 @@
+# Scenario fixture: two pseudo providers and an application service autowiring translators.
+html_translator:
+    default_provider: pseudo
+    providers:
+        pseudo:
+            driver: pseudo
+        second:
+            driver: pseudo
+            corrupt_every: 1
+    default_profile: docs
+    profiles:
+        docs:
+            preset: technical
+    options:
+        batch_size: 7
+
+services:
+    test.translator_consumer:
+        class: HtmlTranslator\Bundle\Tests\Functional\Fixtures\TranslatorConsumer
+        autowire: true
+        public: true

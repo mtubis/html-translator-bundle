@@ -6,6 +6,7 @@ namespace HtmlTranslator\Bundle;
 
 use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
 use HtmlTranslator\Bundle\DependencyInjection\ProviderDefinitions;
+use HtmlTranslator\Bundle\DependencyInjection\TranslatorDefinitions;
 use SensitiveParameter;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -34,6 +35,12 @@ final class HtmlTranslatorBundle extends AbstractBundle
     {
         $container->import('../config/services.php');
         ProviderDefinitions::register($config, $builder);
+        TranslatorDefinitions::register($config, $builder);
+    }
+
+    public function prependExtension(ContainerConfigurator $container, ContainerBuilder $builder): void
+    {
+        TranslatorDefinitions::prependCachePool($builder);
     }
 
     public function getPath(): string

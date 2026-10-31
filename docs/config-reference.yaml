@@ -17,8 +17,9 @@ html_translator:
     #   anthropic                               → AnthropicConfig
     #   symfony_ai                              → a platform configured with symfony/ai-bundle (planned, ADR-0008)
     #   pseudo                                  → PseudoLocalizationProvider, no network (dev, test)
-    # Each entry becomes the service "html_translator.translator.<name>" and the autowiring alias
-    # "HtmlTranslator $<name>Translator" (or #[Target('<name>')]).
+    # Each entry becomes the service "html_translator.translator.<name>", autowired with #[Target('<name>')]; on
+    # Symfony 7.4 also by the argument name "HtmlTranslator $<camelName>Translator" (lm_studio → $lmStudioTranslator),
+    # which Symfony 8.1 deprecates. Names start with a letter and contain letters, digits, "_" and "-".
     providers:
 
         openai:

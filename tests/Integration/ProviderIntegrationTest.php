@@ -7,7 +7,9 @@ namespace HtmlTranslator\Bundle\Tests\Integration;
 use HtmlTranslator\Bundle\ChatModel\ChatModelFactory;
 use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
 use HtmlTranslator\Bundle\DependencyInjection\ProviderDefinitions;
+use HtmlTranslator\Bundle\DependencyInjection\TranslatorDefinitions;
 use HtmlTranslator\Bundle\Drivers;
+use HtmlTranslator\Bundle\Html\HtmlRulesFactory;
 use HtmlTranslator\Bundle\HtmlTranslatorBundle;
 use HtmlTranslator\Bundle\Http\HttpClientFactory;
 use HtmlTranslator\Bundle\Tests\Functional\FunctionalTestCase;
@@ -31,6 +33,8 @@ use PHPUnit\Framework\Attributes\UsesClass;
 #[CoversClass(HttpClientFactory::class)]
 #[UsesClass(ConfigurationTree::class)]
 #[UsesClass(Drivers::class)]
+#[UsesClass(HtmlRulesFactory::class)]
+#[UsesClass(TranslatorDefinitions::class)]
 final class ProviderIntegrationTest extends FunctionalTestCase
 {
     /**
@@ -57,7 +61,7 @@ final class ProviderIntegrationTest extends FunctionalTestCase
         }
 
         self::bootKernel(['config' => ['integration.yaml']]);
-        $translator = self::getContainer()->get('test.translator.' . $entry);
+        $translator = self::getContainer()->get('html_translator.translator.' . $entry);
         self::assertInstanceOf(HtmlTranslator::class, $translator);
 
         $document = $translator->translate('<p>Hello, world!</p>', Locale::fromString('de'), new TranslationOptions(source: Locale::fromString('en')));

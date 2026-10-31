@@ -1,0 +1,5 @@
+# Scenario fixture, on top of logging.yaml, with MonologBundle in the kernel: records go to a test handler.
+monolog:
+    handlers:
+        test:
+            type: test

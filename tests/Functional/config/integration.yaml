@@ -1,5 +1,8 @@
 # Scenario fixture for tests/Integration: real APIs, keys and models from env (see .env.dist).
 html_translator:
+    # Every translation must reach the HTTP client; the unit cache would answer repeated ones.
+    cache:
+        enabled: false
     default_provider: openai
     providers:
         openai:
@@ -14,11 +17,3 @@ html_translator:
             driver: gemini
             api_key: '%env(GEMINI_API_KEY)%'
             model: '%env(HTML_TRANSLATOR_GEMINI_MODEL)%'
-
-# Test-only translators on the provider services; issue #4 adds the bundle's own translator services.
-services:
-    _defaults:
-        public: true
-    test.translator.openai: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.openai'] }
-    test.translator.anthropic: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.anthropic'] }
-    test.translator.gemini: { class: HtmlTranslator\HtmlTranslator, arguments: ['@html_translator.provider.gemini'] }

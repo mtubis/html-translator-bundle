@@ -4,7 +4,7 @@ html_translator:
     # The provider entry used where none is named: the service HtmlTranslator\HtmlTranslator. A literal value: env placeholders are not supported here.
     default_provider:     openai
 
-    # Named providers. "driver" picks the core adapter: openai, gemini, ollama, vllm, lm_studio (OpenAI-compatible presets), openai_compatible (any other OpenAI-compatible server), anthropic, symfony_ai (planned, ADR-0008), pseudo (no network; dev, test). Each entry becomes the service "html_translator.translator.<name>" and the autowiring alias "HtmlTranslator $<name>Translator" (or #[Target('<name>')]).
+    # Named providers. "driver" picks the core adapter: openai, gemini, ollama, vllm, lm_studio (OpenAI-compatible presets), openai_compatible (any other OpenAI-compatible server), anthropic, symfony_ai (planned, ADR-0008), pseudo (no network; dev, test). Each entry becomes the service "html_translator.translator.<name>", autowired with #[Target('<name>')] (on Symfony 7.4 also by the argument name HtmlTranslator $<camelName>Translator). Names start with a letter and contain letters, digits, "_" and "-".
     providers:            # Required
 
         # Prototype

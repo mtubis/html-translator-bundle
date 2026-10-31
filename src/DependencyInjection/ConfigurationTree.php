@@ -14,6 +14,7 @@ use HtmlTranslator\Provider\Llm\Bridge\RetryPolicy;
 use InvalidArgumentException;
 use SensitiveParameter;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
+use Symfony\Component\DependencyInjection\Attribute\Target;
 
 /**
  * The configuration tree specified by docs/config-reference.yaml.
@@ -77,11 +78,15 @@ final class ConfigurationTree
             ->info(
                 'Named providers. "driver" picks the core adapter: openai, gemini, ollama, vllm, lm_studio (OpenAI-compatible '
                 . 'presets), openai_compatible (any other OpenAI-compatible server), anthropic, symfony_ai (planned, ADR-0008), '
-                . 'pseudo (no network; dev, test). Each entry becomes the service "html_translator.translator.<name>" and the '
-                . 'autowiring alias "HtmlTranslator $<name>Translator" (or #[Target(\'<name>\')]).',
+                . 'pseudo (no network; dev, test). Each entry becomes the service "html_translator.translator.<name>", autowired '
+                . 'with #[Target(\'<name>\')] (on Symfony 7.4 also by the argument name HtmlTranslator $<camelName>Translator). '
+                . 'Names start with a letter and contain letters, digits, "_" and "-".',
             )
             ->isRequired()
             ->requiresAtLeastOneElement()
+            ->validate()
+                ->always(self::checkProviderNames(...))
+            ->end()
             // Not "name": openai_compatible has a "name" key, which would become the entry key.
             ->useAttributeAsKey('provider')
             ->normalizeKeys(false)
@@ -382,6 +387,33 @@ final class ConfigurationTree
         }
 
         return $entry;
+    }
+
+    /**
+     * Entry names become autowiring aliases: they must be valid argument names and must not collide once camelized.
+     *
+     * @param array<array-key, mixed> $providers
+     *
+     * @return array<array-key, mixed>
+     */
+    private static function checkProviderNames(#[SensitiveParameter] array $providers): array
+    {
+        $arguments = [];
+        foreach (array_keys($providers) as $name) {
+            $name = (string) $name;
+            if (1 !== preg_match('/^[a-zA-Z][a-zA-Z0-9_-]*$/D', $name)) {
+                throw new InvalidArgumentException(\sprintf('the entry name "%s" must start with a letter and contain only letters, digits, "_" and "-"', $name));
+            }
+
+            $argument = new Target($name . 'Translator')->getParsedName();
+            if (isset($arguments[$argument])) {
+                throw new InvalidArgumentException(\sprintf('the entries "%s" and "%s" both autowire as $%s; rename one of them', $arguments[$argument], $name, $argument));
+            }
+
+            $arguments[$argument] = $name;
+        }
+
+        return $providers;
     }
 
     /**

@@ -7,7 +7,9 @@ namespace HtmlTranslator\Bundle\Tests\Functional;
 use HtmlTranslator\Bundle\ChatModel\ChatModelFactory;
 use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
 use HtmlTranslator\Bundle\DependencyInjection\ProviderDefinitions;
+use HtmlTranslator\Bundle\DependencyInjection\TranslatorDefinitions;
 use HtmlTranslator\Bundle\Drivers;
+use HtmlTranslator\Bundle\Html\HtmlRulesFactory;
 use HtmlTranslator\Bundle\HtmlTranslatorBundle;
 use HtmlTranslator\Bundle\Http\HttpClientFactory;
 use HtmlTranslator\Bundle\Tests\Functional\Fixtures\VendorResponses;
@@ -32,6 +34,8 @@ use Throwable;
 #[CoversClass(HttpClientFactory::class)]
 #[UsesClass(ConfigurationTree::class)]
 #[UsesClass(Drivers::class)]
+#[UsesClass(HtmlRulesFactory::class)]
+#[UsesClass(TranslatorDefinitions::class)]
 final class ProviderDriversTest extends FunctionalTestCase
 {
     /** @var list<array{method: string, url: string, headers: array<string, list<string>>, body: array<array-key, mixed>}> */
@@ -118,7 +122,7 @@ final class ProviderDriversTest extends FunctionalTestCase
     public function it_scopes_the_framework_http_client_by_default(): void
     {
         self::bootKernel(['config' => ['framework_http.yaml']]);
-        $translator = self::scenarioService('test.translator.ollama');
+        $translator = self::scenarioService('html_translator.translator.ollama');
         self::assertInstanceOf(HtmlTranslator::class, $translator);
 
         $document = $translator->translate('<p>Hello</p>', Locale::fromString('pl'));
@@ -148,7 +152,7 @@ final class ProviderDriversTest extends FunctionalTestCase
             return array_shift($responses) ?? new MockResponse('{}', ['http_code' => 500]);
         });
 
-        $translator = self::scenarioService('test.translator.' . $entry);
+        $translator = self::scenarioService('html_translator.translator.' . $entry);
         self::assertInstanceOf(HtmlTranslator::class, $translator);
 
         return $translator;

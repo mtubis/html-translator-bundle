@@ -1,0 +1,9 @@
+# Scenario fixture, on top of pseudo.yaml: the unit cache in a pool of the application.
+html_translator:
+    cache:
+        pool: test.array_pool
+
+services:
+    test.array_pool:
+        class: Symfony\Component\Cache\Adapter\ArrayAdapter
+        public: true
