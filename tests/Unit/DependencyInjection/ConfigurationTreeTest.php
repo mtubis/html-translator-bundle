@@ -396,6 +396,9 @@ final class ConfigurationTreeTest extends TestCase
         yield 'skip_elements not a list' => [['html' => ['skip_elements' => 'address']], 'html_translator.html.skip_elements'];
         yield 'cache enabled not a bool' => [['cache' => ['enabled' => 'yes']], 'Invalid type for path "html_translator.cache.enabled"'];
         yield 'unknown root key' => [['provider' => []], 'Unrecognized option "provider" under "html_translator". Did you mean "providers"'];
+        yield 'provider name starting with a digit' => [['default_provider' => '1st', 'providers' => ['1st' => ['driver' => 'pseudo']]], 'Invalid configuration for path "html_translator.providers": the entry name "1st" must start with a letter and contain only letters, digits, "_" and "-"'];
+        yield 'provider name with a dot' => [['default_provider' => 'a.b', 'providers' => ['a.b' => ['driver' => 'pseudo']]], 'the entry name "a.b" must start with a letter'];
+        yield 'provider names autowiring alike' => [['default_provider' => 'lm_studio', 'providers' => ['lm_studio' => ['driver' => 'pseudo'], 'lmStudio' => ['driver' => 'pseudo']]], 'Invalid configuration for path "html_translator.providers": the entries "lm_studio" and "lmStudio" both autowire as $lmStudioTranslator; rename one of them'];
         yield 'unknown default_provider' => [['default_provider' => 'openai'], 'Invalid configuration for path "html_translator": "default_provider" is "openai", which is not a configured provider; configured: pseudo'];
         yield 'unknown default_profile' => [['default_profile' => 'docs'], 'Invalid configuration for path "html_translator": "default_profile" is "docs", which is not a configured profile; configured: default'];
     }

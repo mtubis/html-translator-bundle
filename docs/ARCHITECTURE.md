@@ -10,7 +10,7 @@
 1. **Configuration instead of wiring** — providers, profiles, options, cache and logging in
    `config/packages/html_translator.yaml`, validated by the Config component at container compile time.
 2. **Dependency injection the Symfony way** — the core `HtmlTranslator` is the service you inject; one service per
-   provider entry, with named autowiring (`HtmlTranslator $anthropicTranslator`, `#[Target('anthropic')]`).
+   provider entry, with named autowiring (`#[Target('anthropic')]`; on Symfony 7.4 also `HtmlTranslator $anthropicTranslator`).
 3. **Symfony infrastructure** — HttpClient (profiler, `MockHttpClient` in tests), cache pools, Monolog channels, the
    console, the Web Profiler; later Messenger and Doctrine.
 4. **Parity with the Laravel package** where the concept is the same (drivers, config keys, commands), Symfony idioms
@@ -48,7 +48,7 @@ final class PageTranslator
 {
     public function __construct(
         private HtmlTranslator $translator,                         // default provider
-        #[Target('anthropic')] private HtmlTranslator $careful,     // or: HtmlTranslator $anthropicTranslator
+        #[Target('anthropic')] private HtmlTranslator $careful,     // Symfony 7.4 also: HtmlTranslator $anthropicTranslator
         private TranslationOptionsFactory $options,
     ) {}
 
@@ -81,7 +81,7 @@ Rules:
 - Every bundle exception implements the core's `HtmlTranslator\Exception\TranslatorException`. Configuration errors
   that can only be found at runtime (env values) are `InvalidConfigurationException` naming the config path
   (`html_translator.providers.anthropic.api_key`).
-- Translator services are public-by-alias only; internal services (`html_translator.chat_model.*`, `.provider.*`,
+- Translator services (`html_translator.translator.<name>`), the `HtmlTranslator` alias and the registries are public; internal services (`html_translator.chat_model.*`, `.provider.*`,
   factories) are private and may change without notice.
 
 ## 5. Container wiring

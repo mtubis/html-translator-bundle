@@ -7,6 +7,7 @@ namespace HtmlTranslator\Bundle\Tests\Unit;
 use HtmlTranslator\Bundle\ChatModel\ChatModelFactory;
 use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
 use HtmlTranslator\Bundle\DependencyInjection\ProviderDefinitions;
+use HtmlTranslator\Bundle\DependencyInjection\TranslatorDefinitions;
 use HtmlTranslator\Bundle\HtmlTranslatorBundle;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -30,7 +31,7 @@ final class SensitiveParametersTest extends TestCase
      */
     public static function classes(): iterable
     {
-        foreach ([ChatModelFactory::class, ProviderDefinitions::class, ConfigurationTree::class, HtmlTranslatorBundle::class] as $class) {
+        foreach ([ChatModelFactory::class, ProviderDefinitions::class, TranslatorDefinitions::class, ConfigurationTree::class, HtmlTranslatorBundle::class] as $class) {
             yield $class => [$class];
         }
     }
