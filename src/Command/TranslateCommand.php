@@ -22,6 +22,7 @@ use Symfony\Component\Console\Input\StreamableInputInterface;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\DependencyInjection\Exception\EnvNotFoundException;
 
 /**
  * Translates an HTML file (or STDIN) into one or more locales. Translated HTML goes to STDOUT or files; progress, the
@@ -82,15 +83,27 @@ final class TranslateCommand extends Command
                 fallback: null === $fallback ? null : TranslationOptionsFactory::FALLBACKS[$fallback],
                 onProgress: $onProgress,
             );
-            // Fails early, before any output, when the profile or source is invalid.
+            // Fails early, before any output, when the profile, the source or a target is invalid.
             $options();
+            $locales = $this->locales($targets);
+
+            // Locale and output path (null: STDOUT), all known before anything is written.
+            $jobs = [];
+            foreach ($locales as $locale) {
+                $path = $this->path($destination, $source, $locale, \count($locales) > 1);
+                if (null !== $path && $this->isInput($path, $source)) {
+                    $errors->error(\sprintf('The output "%s" is the input file; choose another --output.', $path));
+
+                    return self::FAILURE;
+                }
+
+                $jobs[] = [$locale, $path];
+            }
 
             $complete = true;
-            foreach ($targets as $target) {
-                $locale = Locale::fromString($target);
+            foreach ($jobs as [$locale, $path]) {
                 $document = $this->translate($translator, $html, $locale, $options, $errors);
                 $complete = $document->isComplete() && $complete;
-                $path = $this->path($destination, $source, $locale, $several);
 
                 if (null === $path) {
                     // Raw and at every verbosity: the formatter would change the HTML, and -q would drop the result.
@@ -103,7 +116,8 @@ final class TranslateCommand extends Command
 
                 $this->summarize($errors, $locale, $document, $path);
             }
-        } catch (TranslatorException $exception) {
+        } catch (TranslatorException|EnvNotFoundException $exception) {
+            // Both name config paths, env variables or locales, never secret values.
             $errors->error($exception->getMessage());
 
             return self::FAILURE;
@@ -177,14 +191,14 @@ final class TranslateCommand extends Command
         return match (true) {
             null === $destination => $several ? \dirname($source) . '/' . $file : null,
             str_contains($destination, '{locale}') => str_replace('{locale}', $target->toString(), $destination),
-            $this->isDirectory($destination) => rtrim($destination, '/') . '/' . $file,
+            $this->isDirectory($destination) => rtrim($destination, '/' . \DIRECTORY_SEPARATOR) . '/' . $file,
             default => $destination,
         };
     }
 
     private function isDirectory(string $path): bool
     {
-        return str_ends_with($path, '/') || is_dir($path);
+        return str_ends_with($path, '/') || str_ends_with($path, \DIRECTORY_SEPARATOR) || is_dir($path);
     }
 
     private function write(string $path, string $html): bool
@@ -195,6 +209,35 @@ final class TranslateCommand extends Command
         }
 
         return false !== @file_put_contents($path, $html);
+    }
+
+    /**
+     * The targets as locales, each once: --to=pt_br and --to=pt-BR name the same file.
+     *
+     * @param list<string> $targets
+     *
+     * @return list<Locale>
+     */
+    private function locales(array $targets): array
+    {
+        $locales = [];
+        foreach ($targets as $target) {
+            $locale = Locale::fromString($target);
+            $locales[$locale->toString()] ??= $locale;
+        }
+
+        return array_values($locales);
+    }
+
+    private function isInput(string $path, string $source): bool
+    {
+        if ('-' === $source || false === ($input = realpath($source))) {
+            return false;
+        }
+
+        $dir = realpath(\dirname($path));
+
+        return false !== $dir && $dir . \DIRECTORY_SEPARATOR . basename($path) === $input;
     }
 
     private function read(InputInterface $input, string $source): ?string

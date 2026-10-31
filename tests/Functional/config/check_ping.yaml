@@ -1,0 +1,30 @@
+# Scenario fixture for html-translator:check --ping: valid entries whose requests fail in ways that could echo the key.
+html_translator:
+    default_provider: rejected
+    cache:
+        enabled: false
+    http:
+        client: test.mock_http_client
+        retry:
+            max_attempts: 1
+    providers:
+        rejected:
+            driver: openai_compatible
+            base_url: https://rejected.example/v1
+            api_key: sk-fake-ping-71c2e9d04b
+            model: m
+        unreachable:
+            driver: openai_compatible
+            base_url: https://unreachable.example/v1
+            api_key: sk-fake-ping-71c2e9d04b
+            model: m
+        crashing:
+            driver: openai_compatible
+            base_url: https://crashing.example/v1
+            api_key: sk-fake-ping-71c2e9d04b
+            model: m
+
+services:
+    test.mock_http_client:
+        class: Symfony\Component\HttpClient\MockHttpClient
+        public: true

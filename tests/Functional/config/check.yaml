@@ -1,4 +1,4 @@
-# Scenario fixture for html-translator:check: one working entry and three that fail only at runtime.
+# Scenario fixture for html-translator:check: one working entry and four that fail only at runtime.
 html_translator:
     default_provider: pseudo
     providers:
@@ -17,3 +17,6 @@ html_translator:
             driver: anthropic
             api_key: '%env(HTML_TRANSLATOR_TEST_MISSING_KEY)%'
             model: claude-test
+        not_int:
+            driver: ollama
+            model: '%env(int:HTML_TRANSLATOR_TEST_NOT_INT)%'

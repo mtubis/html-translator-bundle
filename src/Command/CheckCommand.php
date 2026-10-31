@@ -10,13 +10,16 @@ use HtmlTranslator\Bundle\Profile\ProfileRegistry;
 use HtmlTranslator\Bundle\TranslatorRegistry;
 use HtmlTranslator\Domain\Locale;
 use HtmlTranslator\Exception\TranslatorException;
+use HtmlTranslator\TranslationOptions;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Exception\EnvNotFoundException;
+use Symfony\Component\DependencyInjection\Exception\RuntimeException as ContainerRuntimeException;
 use Throwable;
 
 /**
@@ -82,16 +85,24 @@ final class CheckCommand extends Command
     }
 
     /**
+     * Any failure is reported and the run goes on, so all problems show up at once.
+     *
      * @param Closure(): mixed $check
      */
     private function check(SymfonyStyle $io, string $label, Closure $check): bool
     {
         try {
             $check();
-        } catch (TranslatorException|EnvNotFoundException $exception) {
-            // Both name config paths or env variables only, never their values.
+        } catch (TranslatorException|EnvNotFoundException|ContainerRuntimeException $exception) {
+            // These name config paths or env variables (also env processors, e.g. invalid JSON), never their values.
             $this->row($io, $label, false);
             $io->writeln('  ' . $exception->getMessage(), OutputInterface::OUTPUT_RAW);
+
+            return false;
+        } catch (Throwable $exception) {
+            // Only the class: messages of errors the core did not wrap may contain request details.
+            $this->row($io, $label, false);
+            $io->writeln('  Unexpected ' . $exception::class . '; run html-translator:translate to see the details.', OutputInterface::OUTPUT_RAW);
 
             return false;
         }
@@ -102,24 +113,17 @@ final class CheckCommand extends Command
     }
 
     /**
-     * A real call: besides the core's errors, anything the HTTP stack throws is reported without stopping the run.
+     * A real call with the core's default options, so a broken `options` section is not reported once per provider.
      */
     private function ping(SymfonyStyle $io, string $name): bool
     {
-        try {
-            return $this->check($io, 'ping ' . $name, fn(): mixed => $this->translators->get($name)->translate(self::PING_HTML, Locale::fromString('de'), $this->options->create()));
-        } catch (Throwable $exception) {
-            // Only the class: messages of errors the core did not wrap may contain request details.
-            $this->row($io, 'ping ' . $name, false);
-            $io->writeln('  Unexpected ' . $exception::class . '; run html-translator:translate to see the details.', OutputInterface::OUTPUT_RAW);
-
-            return false;
-        }
+        return $this->check($io, 'ping ' . $name, fn(): mixed => $this->translators->get($name)->translate(self::PING_HTML, Locale::fromString('de'), new TranslationOptions()));
     }
 
     private function row(SymfonyStyle $io, string $label, bool $ok): void
     {
-        $io->writeln(\sprintf('%s %s %s', $label, str_repeat('.', max(3, 48 - mb_strlen($label))), $ok ? '<fg=green;options=bold>OK</>' : '<fg=red;options=bold>FAIL</>'));
+        // The label may hold a --provider value: escape it for the formatter.
+        $io->writeln(\sprintf('%s %s %s', OutputFormatter::escape($label), str_repeat('.', max(3, 48 - mb_strlen($label))), $ok ? '<fg=green;options=bold>OK</>' : '<fg=red;options=bold>FAIL</>'));
     }
 
     /**
@@ -128,7 +132,7 @@ final class CheckCommand extends Command
     private function providerNames(InputInterface $input): array
     {
         $selected = $input->getOption('provider');
-        $selected = \is_array($selected) ? array_values(array_filter($selected, \is_string(...))) : [];
+        $selected = \is_array($selected) ? array_values(array_unique(array_filter($selected, \is_string(...)))) : [];
 
         return [] === $selected ? $this->translators->names() : $selected;
     }

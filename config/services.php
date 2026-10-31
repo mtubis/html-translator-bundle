@@ -19,6 +19,6 @@ return static function (ContainerConfigurator $container): void {
             ->autoconfigure();
 
     // Console commands (#[AsCommand] makes them lazy); thin layers over the public services.
-    $services->set(TranslateCommand::class);
-    $services->set(CheckCommand::class);
+    $services->set('html_translator.command.translate', TranslateCommand::class);
+    $services->set('html_translator.command.check', CheckCommand::class);
 };

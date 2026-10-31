@@ -141,7 +141,7 @@ final class TranslateCommandTest extends FunctionalTestCase
     }
 
     #[Test]
-    public function it_shows_and_clears_a_progress_bar_on_a_terminal(): void
+    public function it_shows_a_progress_bar_on_a_terminal(): void
     {
         $tester = new CommandTester(new Application(self::bootKernel(['config' => ['console.yaml']]))->find('html-translator:translate'));
         $tester->execute(['input' => $this->dir . '/page.html', '--to' => ['de']], ['capture_stderr_separately' => true, 'decorated' => true]);
@@ -149,6 +149,75 @@ final class TranslateCommandTest extends FunctionalTestCase
         self::assertSame(0, $tester->getStatusCode());
         self::assertSame(self::PSEUDO, $tester->getDisplay());
         self::assertStringContainsString('1/1 batches', $tester->getErrorOutput());
+    }
+
+    #[Test]
+    public function it_writes_the_html_raw_even_when_quiet(): void
+    {
+        new Filesystem()->dumpFile($this->dir . '/styled.html', '<p>Hi <info>there</info></p>');
+
+        $tester = $this->execute(['input' => $this->dir . '/styled.html', '--to' => ['de'], '--quiet' => true]);
+
+        // The console formatter would turn <info> into a style; -q would drop normal output.
+        self::assertSame('<p>[!! Ĥí <info>ţĥéŕé</info> !!]</p>', $tester->getDisplay());
+    }
+
+    #[Test]
+    public function it_writes_into_an_existing_directory_given_without_a_slash(): void
+    {
+        new Filesystem()->mkdir($this->dir . '/existing');
+
+        $this->execute(['input' => $this->dir . '/page.html', '--to' => ['de', 'fr'], '--output' => $this->dir . '/existing']);
+
+        self::assertStringEqualsFile($this->dir . '/existing/page.de.html', self::PSEUDO);
+    }
+
+    #[Test]
+    public function it_translates_each_locale_once(): void
+    {
+        $tester = $this->execute(['input' => $this->dir . '/page.html', '--to' => ['pt_br', 'pt-BR'], '--output' => $this->dir . '/out/']);
+
+        self::assertSame(1, substr_count($tester->getErrorOutput(), 'pt-BR →'));
+        self::assertSame(['page.pt-BR.html'], array_values(array_diff((array) scandir($this->dir . '/out'), ['.', '..'])));
+    }
+
+    #[Test]
+    public function it_checks_every_target_before_writing_anything(): void
+    {
+        $tester = $this->execute(['input' => $this->dir . '/page.html', '--to' => ['de', 'x!'], '--output' => $this->dir . '/out/']);
+
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertDirectoryDoesNotExist($this->dir . '/out');
+        self::assertStringContainsString('x!', $tester->getErrorOutput());
+    }
+
+    #[Test]
+    public function it_checks_the_source_locale_before_any_output(): void
+    {
+        $tester = $this->execute(['input' => $this->dir . '/page.html', '--to' => ['de'], '--from' => 'x!']);
+
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertSame('', $tester->getDisplay());
+    }
+
+    #[Test]
+    public function it_refuses_to_overwrite_the_input(): void
+    {
+        $tester = $this->execute(['input' => $this->dir . '/page.html', '--to' => ['de'], '--output' => $this->dir . '/page.html']);
+
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertStringEqualsFile($this->dir . '/page.html', self::HTML);
+        self::assertStringContainsString(self::squash('The output "' . $this->dir . '/page.html" is the input file; choose another --output.'), self::squash($tester->getErrorOutput()));
+    }
+
+    #[Test]
+    public function it_reports_an_output_it_cannot_write(): void
+    {
+        // The parent "directory" is a file.
+        $tester = $this->execute(['input' => $this->dir . '/page.html', '--to' => ['de'], '--output' => $this->dir . '/page.html/de.html']);
+
+        self::assertSame(1, $tester->getStatusCode());
+        self::assertStringContainsString(self::squash('Cannot write "' . $this->dir . '/page.html/de.html".'), self::squash($tester->getErrorOutput()));
     }
 
     #[Test]
