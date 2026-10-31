@@ -1,0 +1,18 @@
+parameters:
+    level: max
+    paths:
+        - src
+        - tests
+        - config
+    excludePaths:
+        - tests/Functional/var
+    tmpDir: var/phpstan
+    checkUninitializedProperties: true
+    checkImplicitMixed: true
+    checkBenevolentUnionTypes: true
+    reportPossiblyNonexistentGeneralArrayOffset: true
+    reportAnyTypeWideningInVarTag: true
+    treatPhpDocTypesAsCertain: false
+    # phpstan/phpstan-symfony: point it at a dumped test container once the TestKernel exists (issue "Bootstrap").
+    # symfony:
+    #     containerXmlPath: tests/Functional/var/cache/default/HtmlTranslator_Bundle_Tests_Functional_TestKernelDefaultDebugContainer.xml

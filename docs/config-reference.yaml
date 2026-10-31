@@ -1,0 +1,129 @@
+# Specification of the bundle configuration (config/packages/html_translator.yaml).
+#
+# The bundle's configuration tree (HtmlTranslatorBundle::configure()) is built from this file; `bin/console
+# config:dump-reference html_translator` must print the same keys, defaults and comments. Values that come from
+# %env()% are resolved at runtime and validated when the service is first created (ADR-0004).
+
+html_translator:
+
+    # The provider entry used where none is named: the service HtmlTranslator\HtmlTranslator.
+    default_provider: openai
+
+    # Named providers. "driver" picks the core adapter:
+    #   openai, gemini, ollama, vllm, lm_studio → OpenAiCompatibleConfig presets
+    #   openai_compatible                       → new OpenAiCompatibleConfig(...) for any other server
+    #   anthropic                               → AnthropicConfig
+    #   symfony_ai                              → a platform configured with symfony/ai-bundle (planned, ADR-0008)
+    #   pseudo                                  → PseudoLocalizationProvider, no network (dev, test)
+    # Each entry becomes the service "html_translator.translator.<name>" and the autowiring alias
+    # "HtmlTranslator $<name>Translator" (or #[Target('<name>')]).
+    providers:
+
+        openai:
+            driver: openai
+            api_key: '%env(OPENAI_API_KEY)%'
+            model: '%env(HTML_TRANSLATOR_OPENAI_MODEL)%'
+            json_mode: json_schema          # none | json_object | json_schema | json_schema_only
+
+        anthropic:
+            driver: anthropic
+            api_key: '%env(ANTHROPIC_API_KEY)%'
+            model: '%env(HTML_TRANSLATOR_ANTHROPIC_MODEL)%'
+            effort: ~                       # ~ | low | medium | high | xhigh | max
+            base_url: ~                     # ~ = https://api.anthropic.com/v1
+            refusal_fallbacks: false
+            betas: []
+            extra_headers: {}
+            api_version: ~
+            default_max_output_tokens: ~
+
+        gemini:
+            driver: gemini
+            api_key: '%env(GEMINI_API_KEY)%'
+            model: '%env(HTML_TRANSLATOR_GEMINI_MODEL)%'
+
+        ollama:
+            driver: ollama
+            model: '%env(HTML_TRANSLATOR_OLLAMA_MODEL)%'
+            base_url: http://localhost:11434/v1   # or '%env(OLLAMA_BASE_URL)%'
+
+        # vllm:
+        #     driver: vllm
+        #     model: meta-llama/Llama-3.1-8B-Instruct
+        #     base_url: http://localhost:8000/v1
+        #     api_key: ~
+
+        # lm_studio:
+        #     driver: lm_studio
+        #     model: qwen2.5-7b-instruct
+        #     base_url: http://localhost:1234/v1
+
+        # together:
+        #     driver: openai_compatible
+        #     name: together
+        #     base_url: https://api.together.xyz/v1
+        #     api_key: '%env(TOGETHER_API_KEY)%'
+        #     model: meta-llama/Llama-3.3-70B-Instruct-Turbo
+        #     json_mode: json_object
+        #     max_tokens_field: max_tokens
+        #     extra_headers: {}
+
+        pseudo:
+            driver: pseudo
+            corrupt_every: 0                # 0 = never; n ≥ 1: break every n-th unit, to exercise fallbacks
+            corrupt_retries: false          # true: corrupted units stay broken in corrective retries too
+
+    # HTTP: a scoped client of FrameworkBundle's http_client (visible in the profiler, replaceable by MockHttpClient
+    # in tests), wrapped as PSR-18 (ADR-0003). Retries are the core's; do not add retry_failed to this client.
+    http:
+        client: ~                           # service id of an HttpClientInterface; ~ = a scoped client the bundle creates
+        timeout: 180
+        max_duration: ~
+        retry:
+            max_attempts: 3
+            base_delay_ms: 1000
+            max_delay_ms: 30000
+            retry_network_errors: true
+
+    # Named translation profiles. "preset": default | technical | marketing | legal; the other keys override it.
+    # term_policy: translate_all | prefer_original_technical_terms | keep_original; formality: default | formal | informal.
+    default_profile: default
+    profiles:
+        default:
+            preset: default
+        # docs:
+        #     preset: technical
+        #     formality: informal
+        #     term_policy: prefer_original_technical_terms
+        #     domain: Developer documentation of a PHP framework
+        #     glossary: { 'pull request': 'pull request' }
+        #     do_not_translate: [Symfony, Doctrine]
+        #     instructions: ~
+
+    # Defaults of TranslationOptions built by HtmlTranslator\Bundle\Options\TranslationOptionsFactory.
+    options:
+        source: ~                           # ~ = the model detects the source language
+        fallback: keep_original             # keep_original | text_nodes_only | throw
+        max_corrective_retries: 2
+        batch_size: 20
+        token_budget: 2000
+
+    # Additions to the core defaults of what is (not) translated.
+    html:
+        skip_elements: []                   # e.g. [address]
+        skip_classes: []                    # e.g. [brand]
+        translatable_attributes: []         # e.g. [data-tooltip]
+
+    # Unit cache: a PSR-6 pool. The bundle registers "cache.html_translator" (adapter: cache.app) unless "pool" names
+    # another pool. Translated units are reused per text, locale pair, profile and model.
+    cache:
+        enabled: true
+        pool: cache.html_translator
+
+    # Logging: the "html_translator" Monolog channel when MonologBundle is installed, otherwise the "logger" service.
+    logging:
+        enabled: true
+
+    # Profiler panel (kernel.debug only): batches, units, retries, failures and tokens per request (ADR-0006).
+    profiler:
+        enabled: '%kernel.debug%'

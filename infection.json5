@@ -1,0 +1,29 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": ["src"],
+        "excludes": [
+            // Test infrastructure shipped for adapter authors, not production code.
+            "Provider/Llm/Testing/ChatModelContractTestCase.php",
+            "Provider/Llm/Testing/ChatScenario.php",
+            "Provider/Llm/Testing/ChatScenarioKind.php",
+            "Provider/Llm/Testing/RecordedChatRequest.php",
+            "Provider/Testing/TranslationProviderContractTestCase.php"
+        ]
+    },
+    "phpUnit": {
+        "customPath": "vendor/bin/phpunit"
+    },
+    "testFrameworkOptions": "--testsuite=unit,functional",
+    "tmpDir": "var/infection",
+    "logs": {
+        "text": "var/infection/infection.log",
+        "summary": "var/infection/summary.log",
+        "github": true
+    },
+    "mutators": {
+        "@default": true
+    },
+    "minMsi": 80,
+    "minCoveredMsi": 85
+}

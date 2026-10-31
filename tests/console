@@ -1,0 +1,20 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * Console of the functional test kernel, for trying commands by hand:
+ *   tests/console html-translator:translate page.html --to=de
+ *   HTML_TRANSLATOR_TEST_CONFIG=pseudo.yaml tests/console debug:config html_translator
+ * HTML_TRANSLATOR_TEST_CONFIG is a comma-separated list of files in tests/Functional/config.
+ */
+
+use HtmlTranslator\Bundle\Tests\Functional\TestKernel;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$files = array_values(array_filter(explode(',', (string) getenv('HTML_TRANSLATOR_TEST_CONFIG'))));
+
+exit((new Application(new TestKernel($files, environment: 'dev')))->run());

@@ -1,0 +1,83 @@
+{
+    "name": "mtubis/html-translator-bundle",
+    "description": "Symfony bundle for mtubis/html-translator: translate HTML with LLMs (OpenAI, Anthropic, Gemini, Ollama, …) while preserving markup — configuration, services, HttpClient, cache, console and profiler.",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "keywords": [
+        "symfony",
+        "bundle",
+        "html",
+        "translation",
+        "i18n",
+        "l10n",
+        "llm",
+        "openai",
+        "anthropic",
+        "ollama",
+        "ai",
+        "localization"
+    ],
+    "authors": [
+        {
+            "name": "Magdalena Tubis",
+            "homepage": "https://github.com/mtubis",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/mtubis/html-translator-bundle/issues",
+        "source": "https://github.com/mtubis/html-translator-bundle"
+    },
+    "require": {
+        "php": "^8.4",
+        "mtubis/html-translator": "^0.4",
+        "symfony/config": "^7.4 || ^8.1",
+        "symfony/dependency-injection": "^7.4 || ^8.1",
+        "symfony/http-kernel": "^7.4 || ^8.1"
+    },
+    "require-dev": {
+        "symfony/framework-bundle": "^7.4 || ^8.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "HtmlTranslator\\Bundle\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "HtmlTranslator\\Bundle\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "infection/extension-installer": true,
+            "phpstan/extension-installer": true,
+            "symfony/flex": true
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test:unit": "phpunit --testsuite unit",
+        "test:functional": "phpunit --testsuite functional",
+        "test:integration": "phpunit --group integration",
+        "stan": "phpstan analyse --no-progress --memory-limit=1G",
+        "cs": "php-cs-fixer fix --dry-run --diff",
+        "cs:fix": "php-cs-fixer fix",
+        "rector": "rector process --dry-run",
+        "rector:fix": "rector process",
+        "infection": "infection --threads=max --show-mutations",
+        "check": [
+            "@cs",
+            "@rector",
+            "@stan",
+            "@test"
+        ]
+    },
+    "scripts-descriptions": {
+        "check": "Run everything CI runs: code style, Rector dry-run, PHPStan and tests.",
+        "test:integration": "Run the tests against real model APIs (needs keys in .env, see .env.dist)."
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
