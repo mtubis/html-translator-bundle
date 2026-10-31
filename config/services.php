@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use HtmlTranslator\Bundle\Command\CheckCommand;
+use HtmlTranslator\Bundle\Command\TranslateCommand;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 /*
@@ -10,9 +12,13 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
  * Services are private by default; public surface is listed in docs/ARCHITECTURE.md §4.
  */
 return static function (ContainerConfigurator $container): void {
-    $container->services()
+    $services = $container->services()
         ->defaults()
             ->private()
             ->autowire()
             ->autoconfigure();
+
+    // Console commands (#[AsCommand] makes them lazy); thin layers over the public services.
+    $services->set(TranslateCommand::class);
+    $services->set(CheckCommand::class);
 };

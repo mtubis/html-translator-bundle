@@ -1,0 +1,14 @@
+# Scenario fixture for html-translator:check: a profile and the options the core rejects at runtime.
+html_translator:
+    default_provider: pseudo
+    cache:
+        enabled: false
+    providers:
+        pseudo:
+            driver: pseudo
+    profiles:
+        clash:
+            glossary: { Symfony: Symfony }
+            do_not_translate: [Symfony]
+    options:
+        source: not a locale

@@ -1,0 +1,16 @@
+# Scenario fixture for the console commands: a working and a corrupting provider, no unit cache (the pseudo providers
+# would share cached units, see docs/core-feedback/pseudo-cache-id-corruption-settings.md).
+html_translator:
+    default_provider: pseudo
+    cache:
+        enabled: false
+    providers:
+        pseudo:
+            driver: pseudo
+        broken:
+            driver: pseudo
+            corrupt_every: 1
+            corrupt_retries: true
+    profiles:
+        docs:
+            preset: technical

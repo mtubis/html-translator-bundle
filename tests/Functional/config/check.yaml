@@ -1,0 +1,19 @@
+# Scenario fixture for html-translator:check: one working entry and three that fail only at runtime.
+html_translator:
+    default_provider: pseudo
+    providers:
+        pseudo:
+            driver: pseudo
+        empty_key:
+            driver: openai
+            api_key: '%env(HTML_TRANSLATOR_TEST_EMPTY_KEY)%'
+            model: gpt-test
+        bad_url:
+            driver: openai_compatible
+            base_url: not a url
+            api_key: sk-fake-check-5e1f0c93a7
+            model: m
+        missing_env:
+            driver: anthropic
+            api_key: '%env(HTML_TRANSLATOR_TEST_MISSING_KEY)%'
+            model: claude-test
