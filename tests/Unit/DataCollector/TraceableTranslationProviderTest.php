@@ -130,6 +130,73 @@ final class TraceableTranslationProviderTest extends TestCase
     }
 
     #[Test]
+    public function it_rounds_the_duration_and_adds_it_up(): void
+    {
+        $collector = new HtmlTranslatorDataCollector();
+        $batch = $this->batch();
+        $collector->record('p', $batch, new BatchResult([]), 1.26);
+        $collector->record('p', $batch, new BatchResult([]), 2.44);
+
+        self::assertSame([1.3, 2.4], array_map(static fn(BatchRecord $record): float => $record->durationMs, $collector->batches()));
+        self::assertEqualsWithDelta(3.7, $collector->totals()['durationMs'], 0.0001);
+    }
+
+    #[Test]
+    public function it_adds_up_corrections_and_errors_of_every_batch(): void
+    {
+        $collector = new HtmlTranslatorDataCollector();
+        $collector->record('p', $this->batch(corrections: ['u1' => Correction::forMissingUnit()]), null, 1.0, new ProviderException('a'));
+        $collector->record('p', $this->batch(corrections: ['u2' => Correction::forMissingUnit()]), null, 1.0, new ProviderException('b'));
+
+        self::assertSame([2, 2], [$collector->totals()['corrections'], $collector->totals()['errors']]);
+    }
+
+    #[Test]
+    public function it_measures_the_inner_call_in_milliseconds(): void
+    {
+        $collector = new HtmlTranslatorDataCollector();
+        $slow = new readonly class implements TranslationProviderInterface {
+            public function translate(TranslationBatch $batch): BatchResult
+            {
+                usleep(20_000);
+
+                return new BatchResult([]);
+            }
+        };
+
+        new TraceableTranslationProvider($slow, 'p', $collector)->translate($this->batch());
+
+        self::assertGreaterThanOrEqual(19.0, $this->onlyBatch($collector)->durationMs);
+        self::assertLessThan(2000.0, $this->onlyBatch($collector)->durationMs);
+    }
+
+    #[Test]
+    public function it_measures_a_failing_call_in_milliseconds(): void
+    {
+        $collector = new HtmlTranslatorDataCollector();
+
+        try {
+            new TraceableTranslationProvider($this->failingProvider(new ProviderException('x')), 'p', $collector)->translate($this->batch());
+        } catch (ProviderException) {
+        }
+
+        self::assertGreaterThanOrEqual(0.0, $this->onlyBatch($collector)->durationMs);
+        self::assertLessThan(2000.0, $this->onlyBatch($collector)->durationMs);
+    }
+
+    #[Test]
+    public function it_counts_characters_not_bytes_when_truncating(): void
+    {
+        $collector = new HtmlTranslatorDataCollector();
+        $text = str_repeat('ä', 100);
+        $batch = new TranslationBatch(LocalePair::of(null, Locale::fromString('de')), [TranslationUnit::fromText(UnitId::fromString('u1'), UnitKind::Block, $text)]);
+
+        new TraceableTranslationProvider($this->provider(new BatchResult(['u1' => $text])), 'p', $collector)->translate($batch);
+
+        self::assertSame($text, $this->firstUnit($this->onlyBatch($collector))->source);
+    }
+
+    #[Test]
     public function it_adds_up_the_totals_and_resets(): void
     {
         $collector = new HtmlTranslatorDataCollector();
@@ -139,6 +206,7 @@ final class TraceableTranslationProviderTest extends TestCase
         $collector->collect(new Request(), new Response());
 
         self::assertSame(['batches' => 2, 'units' => 6, 'corrections' => 1, 'failures' => 4, 'inputTokens' => 20, 'outputTokens' => 10, 'errors' => 0], array_diff_key($collector->totals(), ['durationMs' => true]));
+        self::assertSame(0.0, new HtmlTranslatorDataCollector()->totals()['durationMs']);
         $restored = unserialize(serialize($collector));
         self::assertInstanceOf(HtmlTranslatorDataCollector::class, $restored);
         self::assertEquals($collector->batches(), $restored->batches());
