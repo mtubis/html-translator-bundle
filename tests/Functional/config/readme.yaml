@@ -1,0 +1,19 @@
+# Scenario fixture for tests/Documentation: every provider entry the README names, all offline.
+html_translator:
+    default_provider: openai
+    http:
+        client: test.no_http_client
+    providers:
+        openai:
+            driver: pseudo
+        anthropic:
+            driver: pseudo
+    profiles:
+        docs:
+            preset: technical
+
+services:
+    # A request would be a bug in a snippet: the pseudo driver never sends one.
+    test.no_http_client:
+        class: Symfony\Component\HttpClient\MockHttpClient
+        arguments: [[]]
