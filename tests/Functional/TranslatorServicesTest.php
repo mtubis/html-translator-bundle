@@ -12,6 +12,7 @@ use HtmlTranslator\Bundle\Exception\InvalidConfigurationException;
 use HtmlTranslator\Bundle\Html\HtmlRulesFactory;
 use HtmlTranslator\Bundle\HtmlTranslatorBundle;
 use HtmlTranslator\Bundle\Options\TranslationOptionsFactory;
+use HtmlTranslator\Bundle\Profile\ProfileFactory;
 use HtmlTranslator\Bundle\Profile\ProfileRegistry;
 use HtmlTranslator\Bundle\Tests\Functional\Fixtures\TranslatorConsumer;
 use HtmlTranslator\Bundle\TranslatorRegistry;
@@ -30,6 +31,7 @@ use Symfony\Component\DependencyInjection\Container;
 #[UsesClass(HtmlRulesFactory::class)]
 #[UsesClass(InvalidConfigurationException::class)]
 #[UsesClass(ProfileRegistry::class)]
+#[UsesClass(ProfileFactory::class)]
 #[UsesClass(TranslationOptionsFactory::class)]
 final class TranslatorServicesTest extends FunctionalTestCase
 {
@@ -67,6 +69,19 @@ final class TranslatorServicesTest extends FunctionalTestCase
         self::assertFalse($registry->has('openai'));
         self::assertSame(self::scenarioService('html_translator.translator.second'), $registry->get('second'));
         self::assertSame(self::getContainer()->get(HtmlTranslator::class), $registry->get());
+    }
+
+    #[Test]
+    public function it_builds_profiles_and_options_from_the_configuration(): void
+    {
+        self::bootKernel(['config' => ['translators.yaml']]);
+        $profiles = self::getContainer()->get(ProfileRegistry::class);
+        $options = self::getContainer()->get(TranslationOptionsFactory::class)->create();
+
+        self::assertSame(['docs', 'default'], $profiles->names());
+        self::assertSame('docs', $profiles->defaultName());
+        self::assertSame($profiles->get('docs'), $options->profile);
+        self::assertSame(7, $options->batchSize);
     }
 
     #[Test]

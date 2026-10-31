@@ -7,9 +7,12 @@ html_translator:
         second:
             driver: pseudo
             corrupt_every: 1
+    default_profile: docs
     profiles:
         docs:
             preset: technical
+    options:
+        batch_size: 7
 
 services:
     test.translator_consumer:

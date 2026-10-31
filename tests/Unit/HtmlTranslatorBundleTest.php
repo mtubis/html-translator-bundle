@@ -27,7 +27,7 @@ use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 #[UsesClass(ConfigurationTree::class)]
 #[UsesClass(Drivers::class)]
 #[UsesClass(HtmlRulesFactory::class)]
-#[UsesClass(TranslatorDefinitions::class)]
+#[CoversClass(TranslatorDefinitions::class)]
 #[UsesClass(HttpClientFactory::class)]
 #[UsesClass(ChatModelFactory::class)]
 #[UsesClass(ProviderDefinitions::class)]

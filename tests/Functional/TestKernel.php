@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel;
 
@@ -24,6 +25,9 @@ final class TestKernel extends Kernel
 
     /** The scenario without config files of its own: the bundle needs at least one provider. */
     public const string DEFAULT_CONFIG = 'pseudo.yaml';
+
+    /** Per process: '' normally, a unique directory under Infection (see processScope()). */
+    private static ?string $processScope = null;
 
     /**
      * @param list<string> $configFiles paths relative to tests/Functional/config
@@ -58,7 +62,25 @@ final class TestKernel extends Kernel
 
     public function getCacheDir(): string
     {
-        return __DIR__ . '/var/cache/' . $this->scenarioHash();
+        return __DIR__ . '/var/cache/' . $this->processScope() . $this->scenarioHash();
+    }
+
+    /**
+     * Under Infection every mutant runs in its own process with mutated code, but the files keep their timestamps: a
+     * container compiled by an earlier process would look fresh and hide the mutation. Each process compiles its own.
+     */
+    private function processScope(): string
+    {
+        if (null === self::$processScope) {
+            self::$processScope = '';
+            if (false !== getenv('INFECTION')) {
+                self::$processScope = 'infection/' . bin2hex(random_bytes(6)) . '/';
+                $dir = __DIR__ . '/var/cache/' . self::$processScope;
+                register_shutdown_function(static fn() => new Filesystem()->remove($dir));
+            }
+        }
+
+        return self::$processScope;
     }
 
     public function getLogDir(): string
