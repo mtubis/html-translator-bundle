@@ -1,0 +1,11 @@
+# Scenario fixture, on top of env.yaml: FrameworkBundle's client answers with a canned response, so a test can see
+# the env values the request was built from.
+framework:
+    http_client:
+        mock_response_factory: test.mock_response
+
+services:
+    test.mock_response:
+        class: Symfony\Component\HttpClient\Response\MockResponse
+        factory: ['HtmlTranslator\Bundle\Tests\Functional\Fixtures\VendorResponses', 'openAiCompatibleSuccess']
+        public: true

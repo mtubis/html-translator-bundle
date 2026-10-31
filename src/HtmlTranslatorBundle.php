@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace HtmlTranslator\Bundle;
 
 use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
+use HtmlTranslator\Bundle\DependencyInjection\ProviderDefinitions;
+use SensitiveParameter;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -28,9 +30,10 @@ final class HtmlTranslatorBundle extends AbstractBundle
     /**
      * @param array<array-key, mixed> $config the processed configuration
      */
-    public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
+    public function loadExtension(#[SensitiveParameter] array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
     {
         $container->import('../config/services.php');
+        ProviderDefinitions::register($config, $builder);
     }
 
     public function getPath(): string
