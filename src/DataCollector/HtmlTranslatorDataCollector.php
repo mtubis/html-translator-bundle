@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace HtmlTranslator\Bundle\DataCollector;
 
+use HtmlTranslator\Exception\TranslatorException;
 use HtmlTranslator\Provider\BatchResult;
 use HtmlTranslator\Provider\TranslationBatch;
 use Symfony\Bundle\FrameworkBundle\DataCollector\AbstractDataCollector;
@@ -25,6 +26,12 @@ final class HtmlTranslatorDataCollector extends AbstractDataCollector
 
     /** Characters of a unit text kept for the panel. */
     public const int PREVIEW_LENGTH = 120;
+
+    /** Characters of an error message kept for the panel; core messages put the status and vendor error last. */
+    public const int ERROR_LENGTH = 500;
+
+    /** Batches kept with all details; later ones (long console runs, workers) only count towards the totals. */
+    public const int MAX_BATCHES = 200;
 
     public function getName(): string
     {
@@ -56,8 +63,7 @@ final class HtmlTranslatorDataCollector extends AbstractDataCollector
             );
         }
 
-        $batches = $this->batches();
-        $batches[] = new BatchRecord(
+        $record = new BatchRecord(
             entry: $entry,
             source: $batch->locales->source?->toString() ?? 'auto',
             target: $batch->locales->target->toString(),
@@ -68,10 +74,20 @@ final class HtmlTranslatorDataCollector extends AbstractDataCollector
             inputTokens: $result?->usage?->inputTokens,
             outputTokens: $result?->usage?->outputTokens,
             durationMs: round($durationMs, 1),
-            error: $error instanceof Throwable ? $error::class . ': ' . $this->truncate($error->getMessage()) : null,
+            error: $error instanceof Throwable ? $this->describe($error) : null,
             preview: $preview,
         );
-        $this->data['batches'] = $batches;
+
+        $batches = $this->batches();
+        if (\count($batches) < self::MAX_BATCHES) {
+            $batches[] = $record;
+            $this->data['batches'] = $batches;
+
+            return;
+        }
+
+        // Only the numbers of the batches beyond the limit, so memory and the profile stay bounded.
+        $this->data['omitted'] = $this->add($this->omitted(), $record);
     }
 
     /**
@@ -85,23 +101,82 @@ final class HtmlTranslatorDataCollector extends AbstractDataCollector
     }
 
     /**
+     * Batches beyond MAX_BATCHES, which the panel does not list.
+     */
+    public function omittedBatches(): int
+    {
+        return $this->omitted()['batches'];
+    }
+
+    /**
+     * Over all batches of the request, the omitted ones included.
+     *
      * @return array{batches: int, units: int, corrections: int, failures: int, inputTokens: int, outputTokens: int, durationMs: float, errors: int}
      */
     public function totals(): array
     {
-        $totals = ['batches' => 0, 'units' => 0, 'corrections' => 0, 'failures' => 0, 'inputTokens' => 0, 'outputTokens' => 0, 'durationMs' => 0.0, 'errors' => 0];
+        $totals = $this->omitted();
         foreach ($this->batches() as $batch) {
-            ++$totals['batches'];
-            $totals['units'] += $batch->units;
-            $totals['corrections'] += $batch->corrections;
-            $totals['failures'] += $batch->failures + $batch->permanentFailures;
-            $totals['inputTokens'] += $batch->inputTokens ?? 0;
-            $totals['outputTokens'] += $batch->outputTokens ?? 0;
-            $totals['durationMs'] += $batch->durationMs;
-            $totals['errors'] += null === $batch->error ? 0 : 1;
+            $totals = $this->add($totals, $batch);
         }
 
         return $totals;
+    }
+
+    /**
+     * @param array{batches: int, units: int, corrections: int, failures: int, inputTokens: int, outputTokens: int, durationMs: float, errors: int} $sum
+     *
+     * @return array{batches: int, units: int, corrections: int, failures: int, inputTokens: int, outputTokens: int, durationMs: float, errors: int}
+     */
+    private function add(array $sum, BatchRecord $batch): array
+    {
+        return [
+            'batches' => $sum['batches'] + 1,
+            'units' => $sum['units'] + $batch->units,
+            'corrections' => $sum['corrections'] + $batch->corrections,
+            'failures' => $sum['failures'] + $batch->failures + $batch->permanentFailures,
+            'inputTokens' => $sum['inputTokens'] + ($batch->inputTokens ?? 0),
+            'outputTokens' => $sum['outputTokens'] + ($batch->outputTokens ?? 0),
+            'durationMs' => $sum['durationMs'] + $batch->durationMs,
+            'errors' => $sum['errors'] + (null === $batch->error ? 0 : 1),
+        ];
+    }
+
+    /**
+     * The totals of the batches beyond MAX_BATCHES (zero while there are none).
+     *
+     * @return array{batches: int, units: int, corrections: int, failures: int, inputTokens: int, outputTokens: int, durationMs: float, errors: int}
+     */
+    private function omitted(): array
+    {
+        $stored = $this->data['omitted'] ?? [];
+        $stored = \is_array($stored) ? $stored : [];
+        $int = static fn(string $key): int => \is_int($stored[$key] ?? null) ? $stored[$key] : 0;
+
+        return [
+            'batches' => $int('batches'),
+            'units' => $int('units'),
+            'corrections' => $int('corrections'),
+            'failures' => $int('failures'),
+            'inputTokens' => $int('inputTokens'),
+            'outputTokens' => $int('outputTokens'),
+            'durationMs' => \is_float($stored['durationMs'] ?? null) ? $stored['durationMs'] : 0.0,
+            'errors' => $int('errors'),
+        ];
+    }
+
+    /**
+     * Messages of the core's exceptions are redacted (no keys, no header values); others may carry request details.
+     */
+    private function describe(Throwable $error): string
+    {
+        if (!$error instanceof TranslatorException) {
+            return $error::class;
+        }
+
+        $message = $error->getMessage();
+
+        return $error::class . ': ' . (mb_strlen($message) > self::ERROR_LENGTH ? mb_substr($message, 0, self::ERROR_LENGTH - 1) . '…' : $message);
     }
 
     private function truncate(string $text): string

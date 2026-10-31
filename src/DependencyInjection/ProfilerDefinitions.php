@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace HtmlTranslator\Bundle\DependencyInjection;
 
-use HtmlTranslator\Bundle\DataCollector\CacheableTraceableTranslationProvider;
 use HtmlTranslator\Bundle\DataCollector\HtmlTranslatorDataCollector;
-use HtmlTranslator\Bundle\DataCollector\TraceableTranslationProvider;
-use HtmlTranslator\Provider\CacheableProviderInterface;
+use HtmlTranslator\Bundle\DataCollector\TraceableProviderFactory;
+use HtmlTranslator\Provider\TranslationProviderInterface;
 use SensitiveParameter;
 use Symfony\Bundle\WebProfilerBundle\WebProfilerBundle;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 
@@ -33,19 +33,18 @@ final class ProfilerDefinitions
         }
 
         $builder->register(self::COLLECTOR, HtmlTranslatorDataCollector::class)
-            ->addTag('data_collector', ['template' => HtmlTranslatorDataCollector::TEMPLATE, 'id' => HtmlTranslatorDataCollector::NAME]);
+            ->addTag('data_collector', ['template' => HtmlTranslatorDataCollector::TEMPLATE, 'id' => HtmlTranslatorDataCollector::NAME])
+            // Also reset where the profiler (which resets its collectors) is off, e.g. in long-running workers.
+            ->addTag('kernel.reset', ['method' => 'reset']);
 
         $providers = $config['providers'] ?? [];
         foreach (array_keys(\is_array($providers) ? $providers : []) as $name) {
             $id = ProviderDefinitions::PROVIDER_PREFIX . $name;
-            $class = $builder->getDefinition($id)->getClass();
 
-            // Exactly as cacheable as the inner provider: the core skips the cache for providers that are not.
-            $traceable = null !== $class && is_subclass_of($class, CacheableProviderInterface::class)
-                ? CacheableTraceableTranslationProvider::class
-                : TraceableTranslationProvider::class;
-
-            $builder->register($id . '.traceable', $traceable)
+            // The factory picks the cacheable variant from the actual inner object (an app override or decorator
+            // included), so caching is the same as without the profiler.
+            $builder->register($id . '.traceable', TranslationProviderInterface::class)
+                ->setFactory([TraceableProviderFactory::class, 'decorate'])
                 ->setDecoratedService($id)
                 ->setArguments([new Reference('.inner'), (string) $name, new Reference(self::COLLECTOR)]);
         }
@@ -65,6 +64,12 @@ final class ProfilerDefinitions
         $profiler = $config['profiler'] ?? [];
 
         // The default '%kernel.debug%' is not resolved by the configuration tree; resolve it here.
-        return true === $builder->getParameterBag()->resolveValue(\is_array($profiler) ? $profiler['enabled'] ?? false : false);
+        $enabled = $builder->getParameterBag()->resolveValue(\is_array($profiler) ? $profiler['enabled'] ?? false : false);
+        if (!\is_bool($enabled)) {
+            // An env placeholder: the panel is wired while the container is compiled, before env values exist.
+            throw new InvalidConfigurationException('Invalid configuration for path "html_translator.profiler.enabled": expected true, false or a parameter such as %kernel.debug%; env variables are not supported.');
+        }
+
+        return $enabled;
     }
 }

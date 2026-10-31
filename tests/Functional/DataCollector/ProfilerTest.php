@@ -8,6 +8,7 @@ use HtmlTranslator\Bundle\ChatModel\ChatModelFactory;
 use HtmlTranslator\Bundle\DataCollector\BatchRecord;
 use HtmlTranslator\Bundle\DataCollector\CacheableTraceableTranslationProvider;
 use HtmlTranslator\Bundle\DataCollector\HtmlTranslatorDataCollector;
+use HtmlTranslator\Bundle\DataCollector\TraceableProviderFactory;
 use HtmlTranslator\Bundle\DataCollector\TraceableTranslationProvider;
 use HtmlTranslator\Bundle\DataCollector\UnitPreview;
 use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
@@ -26,6 +27,7 @@ use HtmlTranslator\Domain\LocalePair;
 use HtmlTranslator\Domain\TranslationUnit;
 use HtmlTranslator\Domain\UnitId;
 use HtmlTranslator\Domain\UnitKind;
+use HtmlTranslator\Exception\ProviderException;
 use HtmlTranslator\HtmlTranslator;
 use HtmlTranslator\Provider\BatchResult;
 use HtmlTranslator\Provider\Llm\LlmTranslationProvider;
@@ -38,6 +40,8 @@ use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\Bundle\WebProfilerBundle\WebProfilerBundle;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Profiler\Profiler;
 use Symfony\Component\HttpKernel\TerminableInterface;
@@ -50,6 +54,7 @@ use Twig\Environment;
 #[CoversClass(HtmlTranslatorBundle::class)]
 #[UsesClass(BatchRecord::class)]
 #[UsesClass(UnitPreview::class)]
+#[UsesClass(TraceableProviderFactory::class)]
 #[UsesClass(ConfigurationTree::class)]
 #[UsesClass(Drivers::class)]
 #[UsesClass(ProviderDefinitions::class)]
@@ -98,6 +103,9 @@ final class ProfilerTest extends FunctionalTestCase
         self::assertInstanceOf(CacheItemPoolInterface::class, $pool);
         $pool->clear();
         $translator = self::getContainer()->get(HtmlTranslator::class);
+
+        // The decorator is in place in this very container: the hits come through it.
+        self::assertInstanceOf(CacheableTraceableTranslationProvider::class, self::scenarioService('html_translator.provider.pseudo'));
 
         $translator->translate('<p>Hello</p><p>World</p>', Locale::fromString('pl'));
         $second = $translator->translate('<p>Hello</p><p>World</p>', Locale::fromString('pl'));
@@ -154,6 +162,7 @@ final class ProfilerTest extends FunctionalTestCase
         // Core unit texts encode "<" already; a raw one proves the template escapes on its own.
         $script = TranslationUnit::fromText(UnitId::fromString('x1'), UnitKind::Block, '<script>alert(1)</script>');
         $collector->record('pseudo', new TranslationBatch(LocalePair::of(null, Locale::fromString('de')), [$script]), new BatchResult(['x1' => '<script>alert(2)</script>']), 1.0);
+        $collector->record('pseudo', new TranslationBatch(LocalePair::of(null, Locale::fromString('de')), [$script]), null, 1.0, new ProviderException('The model answered <script>alert(3)</script>'));
         $twig = self::scenarioService('twig');
         self::assertInstanceOf(Environment::class, $twig);
         $template = $twig->load(HtmlTranslatorDataCollector::TEMPLATE);
@@ -165,7 +174,38 @@ final class ProfilerTest extends FunctionalTestCase
         self::assertStringNotContainsString('<script>alert', $panel);
         self::assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $panel);
         self::assertStringContainsString('&lt;script&gt;alert(2)&lt;/script&gt;', $panel);
-        self::assertStringContainsString('batches', $toolbar);
+        self::assertStringContainsString('&lt;script&gt;alert(3)&lt;/script&gt;', $panel);
+        self::assertMatchesRegularExpression('#<span class="sf-toolbar-value">\s*3\s*</span>#', $toolbar);
+        self::assertMatchesRegularExpression('#<b>Errors</b><span class="sf-toolbar-status sf-toolbar-status-red">1</span>#', $toolbar);
+    }
+
+    #[Test]
+    public function it_keeps_secrets_out_of_the_profile(): void
+    {
+        $kernel = self::bootKernel(['config' => ['profiler.yaml', 'web_profiler.yaml', 'profiler_llm.yaml'], 'bundles' => self::BUNDLES]);
+        $client = self::scenarioService('test.mock_http_client');
+        self::assertInstanceOf(MockHttpClient::class, $client);
+        // A proxy echoing the key and the header in its error.
+        $client->setResponseFactory([new MockResponse('{"error": {"message": "Invalid key sk-fake-profiler-3d9a51c7e2 (hdr-fake-profiler-8b06f4a1d5)"}}', ['http_code' => 401])]);
+
+        $request = Request::create('/translate?provider=rejected');
+        $response = $kernel->handle($request);
+        self::assertInstanceOf(TerminableInterface::class, $kernel);
+        $kernel->terminate($request, $response);
+
+        $profiler = self::scenarioService('profiler');
+        self::assertInstanceOf(Profiler::class, $profiler);
+        $collector = $profiler->loadProfileFromResponse($response)?->getCollector(HtmlTranslatorDataCollector::NAME);
+        self::assertInstanceOf(HtmlTranslatorDataCollector::class, $collector);
+        self::assertSame(1, $collector->totals()['errors']);
+
+        $twig = self::scenarioService('twig');
+        self::assertInstanceOf(Environment::class, $twig);
+        $panel = $twig->load(HtmlTranslatorDataCollector::TEMPLATE)->renderBlock('panel', ['collector' => $collector]);
+        foreach ([serialize($collector), $panel] as $text) {
+            self::assertStringNotContainsString('sk-fake-profiler-3d9a51c7e2', $text);
+            self::assertStringNotContainsString('hdr-fake-profiler-8b06f4a1d5', $text);
+        }
     }
 
     private function profileRequest(string $uri): HtmlTranslatorDataCollector

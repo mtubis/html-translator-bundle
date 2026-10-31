@@ -7,6 +7,7 @@ namespace HtmlTranslator\Bundle\Tests\Unit\DataCollector;
 use HtmlTranslator\Bundle\DataCollector\BatchRecord;
 use HtmlTranslator\Bundle\DataCollector\CacheableTraceableTranslationProvider;
 use HtmlTranslator\Bundle\DataCollector\HtmlTranslatorDataCollector;
+use HtmlTranslator\Bundle\DataCollector\TraceableProviderFactory;
 use HtmlTranslator\Bundle\DataCollector\TraceableTranslationProvider;
 use HtmlTranslator\Bundle\DataCollector\UnitPreview;
 use HtmlTranslator\Domain\Locale;
@@ -33,6 +34,7 @@ use Symfony\Component\HttpFoundation\Response;
 #[CoversClass(TraceableTranslationProvider::class)]
 #[CoversClass(CacheableTraceableTranslationProvider::class)]
 #[CoversClass(HtmlTranslatorDataCollector::class)]
+#[CoversClass(TraceableProviderFactory::class)]
 #[CoversClass(BatchRecord::class)]
 #[CoversClass(UnitPreview::class)]
 final class TraceableTranslationProviderTest extends TestCase
@@ -74,6 +76,58 @@ final class TraceableTranslationProviderTest extends TestCase
         self::assertSame(ProviderException::class . ': The provider returned HTTP 429.', $batch->error);
         self::assertSame(['auto', 0, null], [$batch->source, $batch->failures, $this->firstUnit($batch)->translation]);
         self::assertSame(1, $collector->totals()['errors']);
+    }
+
+    #[Test]
+    public function it_picks_the_variant_from_the_inner_object(): void
+    {
+        $collector = new HtmlTranslatorDataCollector();
+        $cacheable = new class implements CacheableProviderInterface {
+            public function translate(TranslationBatch $batch): BatchResult
+            {
+                return new BatchResult([]);
+            }
+
+            public function cacheId(): string
+            {
+                return 'id';
+            }
+        };
+
+        self::assertInstanceOf(CacheableTraceableTranslationProvider::class, TraceableProviderFactory::decorate($cacheable, 'p', $collector));
+        self::assertInstanceOf(TraceableTranslationProvider::class, TraceableProviderFactory::decorate($this->provider(new BatchResult([])), 'p', $collector));
+    }
+
+    #[Test]
+    public function it_keeps_only_the_class_of_an_exception_the_core_did_not_raise(): void
+    {
+        $collector = new HtmlTranslatorDataCollector();
+        $collector->record('p', $this->batch(), null, 1.0, new RuntimeException('GET https://api.example?key=sk-secret failed'));
+        $collector->record('p', $this->batch(), null, 1.0, new ProviderException(str_repeat('x', 600)));
+
+        self::assertSame(
+            [RuntimeException::class, ProviderException::class . ': ' . str_repeat('x', 499) . '…'],
+            array_map(static fn(BatchRecord $batch): ?string => $batch->error, $collector->batches()),
+        );
+    }
+
+    #[Test]
+    public function it_lists_a_bounded_number_of_batches_and_counts_the_rest(): void
+    {
+        $collector = new HtmlTranslatorDataCollector();
+        for ($i = 0; $i < HtmlTranslatorDataCollector::MAX_BATCHES + 3; ++$i) {
+            $collector->record('p', $this->batch(), new BatchResult([], ['u1' => 'x'], [], new TokenUsage(2, 1)), 1.0);
+        }
+
+        self::assertCount(HtmlTranslatorDataCollector::MAX_BATCHES, $collector->batches());
+        self::assertSame(3, $collector->omittedBatches());
+        $totals = $collector->totals();
+        self::assertSame([203, 609, 203, 406, 203], [$totals['batches'], $totals['units'], $totals['failures'], $totals['inputTokens'], $totals['outputTokens']]);
+        self::assertEqualsWithDelta(203.0, $totals['durationMs'], 0.001);
+
+        $collector->reset();
+
+        self::assertSame(0, $collector->omittedBatches());
     }
 
     #[Test]

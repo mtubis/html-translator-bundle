@@ -14,6 +14,7 @@
             <div class="sf-toolbar-info-piece"><b>Units</b><span>{{ totals.units }}</span></div>
             <div class="sf-toolbar-info-piece"><b>Tokens</b><span>{{ totals.inputTokens }} → {{ totals.outputTokens }}</span></div>
             <div class="sf-toolbar-info-piece"><b>Failures</b><span class="sf-toolbar-status {{ totals.failures > 0 ? 'sf-toolbar-status-red' }}">{{ totals.failures }}</span></div>
+            <div class="sf-toolbar-info-piece"><b>Errors</b><span class="sf-toolbar-status {{ totals.errors > 0 ? 'sf-toolbar-status-red' }}">{{ totals.errors }}</span></div>
         {% endset %}
         {{ include('@WebProfiler/Profiler/toolbar_item.html.twig', {link: profiler_url, status: status}) }}
     {% endif %}
@@ -24,7 +25,7 @@
     <span class="label {{ totals.batches == 0 ? 'disabled' }} {{ totals.failures > 0 or totals.errors > 0 ? 'label-status-error' }}">
         <span class="icon">⇄</span>
         <strong>HTML translator</strong>
-        {% if totals.failures > 0 %}<span class="count">{{ totals.failures }}</span>{% endif %}
+        {% if totals.failures + totals.errors > 0 %}<span class="count">{{ totals.failures + totals.errors }}</span>{% endif %}
     </span>
 {% endblock %}
 
@@ -44,7 +45,7 @@
             <div class="metric"><span class="value">{{ totals.durationMs|number_format(1) }} ms</span><span class="label">Time</span></div>
         </div>
 
-        <p class="text-muted">Batches sent to the providers. Units served from the unit cache and issues after fallback are not shown: they are decided by the core translator, which the bundle cannot observe.</p>
+        <p class="text-muted">Batches sent to the providers, sub-requests included. Units served from the unit cache and issues after fallback are not shown: they are decided by the core translator, which the bundle cannot observe.</p>
 
         <table>
             <thead>
@@ -86,5 +87,9 @@
                 {% endfor %}
             </tbody>
         </table>
+
+        {% if collector.omittedBatches > 0 %}
+            <p class="text-muted">{{ collector.omittedBatches }} more batches are counted in the totals but not listed.</p>
+        {% endif %}
     {% endif %}
 {% endblock %}

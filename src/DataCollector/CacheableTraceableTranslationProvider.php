@@ -20,7 +20,7 @@ final class CacheableTraceableTranslationProvider implements CacheableProviderIn
     public function cacheId(): string
     {
         if (!$this->inner instanceof CacheableProviderInterface) {
-            // ProfilerDefinitions picks this class only for cacheable providers.
+            // TraceableProviderFactory picks this class only for cacheable providers.
             throw new LogicException(\sprintf('%s is not cacheable.', $this->inner::class));
         }
 

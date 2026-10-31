@@ -1,0 +1,22 @@
+# Scenario fixture, on top of profiler.yaml and web_profiler.yaml: an LLM entry whose requests are rejected.
+html_translator:
+    http:
+        client: test.mock_http_client
+        retry:
+            max_attempts: 1
+    providers:
+        rejected:
+            driver: openai_compatible
+            base_url: https://rejected.example/v1
+            api_key: sk-fake-profiler-3d9a51c7e2
+            model: m
+            extra_headers:
+                X-Gateway-Token: hdr-fake-profiler-8b06f4a1d5
+
+services:
+    test.mock_http_client:
+        class: Symfony\Component\HttpClient\MockHttpClient
+        public: true
+    # The failing request is expected: keep its critical log line out of the test output.
+    logger:
+        class: Psr\Log\NullLogger
