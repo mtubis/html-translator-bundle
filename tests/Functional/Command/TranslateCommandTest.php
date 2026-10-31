@@ -7,6 +7,7 @@ namespace HtmlTranslator\Bundle\Tests\Functional\Command;
 use HtmlTranslator\Bundle\ChatModel\ChatModelFactory;
 use HtmlTranslator\Bundle\Command\TranslateCommand;
 use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
+use HtmlTranslator\Bundle\DependencyInjection\ProfilerDefinitions;
 use HtmlTranslator\Bundle\DependencyInjection\ProviderDefinitions;
 use HtmlTranslator\Bundle\DependencyInjection\TranslatorDefinitions;
 use HtmlTranslator\Bundle\Drivers;
@@ -37,6 +38,7 @@ use Symfony\Component\Filesystem\Filesystem;
 #[UsesClass(Drivers::class)]
 #[UsesClass(ProviderDefinitions::class)]
 #[UsesClass(TranslatorDefinitions::class)]
+#[UsesClass(ProfilerDefinitions::class)]
 #[UsesClass(HtmlRulesFactory::class)]
 #[UsesClass(TranslatorRegistry::class)]
 #[UsesClass(TranslationOptionsFactory::class)]

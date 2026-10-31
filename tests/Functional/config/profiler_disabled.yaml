@@ -1,0 +1,4 @@
+# Scenario fixture, on top of profiler.yaml: the panel switched off.
+html_translator:
+    profiler:
+        enabled: false

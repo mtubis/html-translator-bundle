@@ -128,5 +128,6 @@ html_translator:
         enabled: true
 
     # Profiler panel (kernel.debug only): batches, units, retries, failures and tokens per request (ADR-0006).
+    # A literal or a parameter, not an env variable: the panel is wired when the container is compiled.
     profiler:
         enabled: '%kernel.debug%'

@@ -97,7 +97,7 @@ config/packages/html_translator.yaml
  html_translator.retrier          core Retrier(RetryPolicy)
  html_translator.chat_model.<n>   ChatModelFactory::create(<name>, <driver>, <entry with env placeholders>)   (runtime)
  html_translator.provider.<n>     LlmTranslationProvider(chat model) | PseudoLocalizationProvider
-     └── (debug) .traceable       TraceableTranslationProvider ─► HtmlTranslatorDataCollector
+     └── (debug) .traceable       (Cacheable)TraceableTranslationProvider, as cacheable as the inner one ─► HtmlTranslatorDataCollector
  html_translator.translator.<n>   new HtmlTranslator(provider, cache pool, logger, SkipRules, TranslatableAttributes)
  TranslatorRegistry · ProfileRegistry · TranslationOptionsFactory · console commands
 ```

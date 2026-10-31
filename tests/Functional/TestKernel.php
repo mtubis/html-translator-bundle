@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace HtmlTranslator\Bundle\Tests\Functional;
 
 use HtmlTranslator\Bundle\HtmlTranslatorBundle;
+use HtmlTranslator\Bundle\Tests\Functional\Fixtures\TranslateController;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\Config\Loader\LoaderInterface;
@@ -12,6 +13,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel;
+use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
 /**
  * Minimal application kernel for functional tests (ADR-0007).
@@ -99,6 +101,20 @@ final class TestKernel extends Kernel
     private function getConfigDir(): string
     {
         return $this->getCacheDir() . '/config';
+    }
+
+    /**
+     * One route for scenarios that translate during a request (the profiler scenario defines its controller).
+     * Replaces MicroKernelTrait's private method, like getConfigDir().
+     */
+    private function configureRoutes(RoutingConfigurator $routes): void
+    {
+        $routes->add('translate', '/translate')->controller(TranslateController::class);
+
+        if (isset($this->getBundles()['WebProfilerBundle'])) {
+            // The panel's toolbar item links to the profiler.
+            $routes->import('@WebProfilerBundle/Resources/config/routing/profiler.php')->prefix('/_profiler');
+        }
     }
 
     protected function configureContainer(ContainerBuilder $container, LoaderInterface $loader): void

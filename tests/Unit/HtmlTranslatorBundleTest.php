@@ -6,6 +6,7 @@ namespace HtmlTranslator\Bundle\Tests\Unit;
 
 use HtmlTranslator\Bundle\ChatModel\ChatModelFactory;
 use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
+use HtmlTranslator\Bundle\DependencyInjection\ProfilerDefinitions;
 use HtmlTranslator\Bundle\DependencyInjection\ProviderDefinitions;
 use HtmlTranslator\Bundle\DependencyInjection\TranslatorDefinitions;
 use HtmlTranslator\Bundle\Drivers;
@@ -28,6 +29,7 @@ use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
 #[UsesClass(Drivers::class)]
 #[UsesClass(HtmlRulesFactory::class)]
 #[CoversClass(TranslatorDefinitions::class)]
+#[UsesClass(ProfilerDefinitions::class)]
 #[UsesClass(HttpClientFactory::class)]
 #[UsesClass(ChatModelFactory::class)]
 #[UsesClass(ProviderDefinitions::class)]

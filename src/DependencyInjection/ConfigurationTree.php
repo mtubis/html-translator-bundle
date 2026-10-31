@@ -341,7 +341,7 @@ final class ConfigurationTree
             ->info('Profiler panel (kernel.debug only): batches, units, retries, failures and tokens per request (ADR-0006).')
             ->addDefaultsIfNotSet()
             ->children()
-                ->booleanNode('enabled')->info('Collect data for the profiler panel; needs WebProfilerBundle.')->defaultValue('%kernel.debug%')->end()
+                ->booleanNode('enabled')->info('Collect data for the profiler panel; needs WebProfilerBundle and kernel.debug. A literal or a parameter: env variables are not supported (the panel is wired at compile time).')->defaultValue('%kernel.debug%')->end()
             ->end();
 
         return $node;

@@ -1,0 +1,23 @@
+# Scenario fixture for the profiler panel: the profiler collects every request (add web_profiler.yaml together with
+# WebProfilerBundle in the kernel).
+framework:
+    profiler:
+        collect: true
+
+html_translator:
+    default_provider: pseudo
+    providers:
+        pseudo:
+            driver: pseudo
+        broken:
+            driver: pseudo
+            corrupt_every: 1
+            corrupt_retries: true
+        ollama:
+            driver: ollama
+            model: llama-test
+
+services:
+    HtmlTranslator\Bundle\Tests\Functional\Fixtures\TranslateController:
+        autowire: true
+        tags: [controller.service_arguments]

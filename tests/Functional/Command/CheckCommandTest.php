@@ -8,6 +8,7 @@ use Closure;
 use HtmlTranslator\Bundle\ChatModel\ChatModelFactory;
 use HtmlTranslator\Bundle\Command\CheckCommand;
 use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
+use HtmlTranslator\Bundle\DependencyInjection\ProfilerDefinitions;
 use HtmlTranslator\Bundle\DependencyInjection\ProviderDefinitions;
 use HtmlTranslator\Bundle\DependencyInjection\TranslatorDefinitions;
 use HtmlTranslator\Bundle\Drivers;
@@ -37,6 +38,7 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 #[UsesClass(Drivers::class)]
 #[UsesClass(ProviderDefinitions::class)]
 #[UsesClass(TranslatorDefinitions::class)]
+#[UsesClass(ProfilerDefinitions::class)]
 #[UsesClass(HtmlRulesFactory::class)]
 #[UsesClass(HttpClientFactory::class)]
 #[UsesClass(ChatModelFactory::class)]

@@ -1,0 +1,95 @@
+{# Profiler panel of html-translator (ADR-0006). Unit texts are plain text: auto-escaping applies, never |raw. #}
+{% extends '@WebProfiler/Profiler/layout.html.twig' %}
+
+{% block toolbar %}
+    {% set totals = collector.totals %}
+    {% if totals.batches > 0 %}
+        {% set status = totals.failures > 0 or totals.errors > 0 ? 'red' : '' %}
+        {% set icon %}
+            <span class="sf-toolbar-value">{{ totals.batches }}</span>
+            <span class="sf-toolbar-label">batches</span>
+        {% endset %}
+        {% set text %}
+            <div class="sf-toolbar-info-piece"><b>Batches</b><span class="sf-toolbar-status">{{ totals.batches }}</span></div>
+            <div class="sf-toolbar-info-piece"><b>Units</b><span>{{ totals.units }}</span></div>
+            <div class="sf-toolbar-info-piece"><b>Tokens</b><span>{{ totals.inputTokens }} → {{ totals.outputTokens }}</span></div>
+            <div class="sf-toolbar-info-piece"><b>Failures</b><span class="sf-toolbar-status {{ totals.failures > 0 ? 'sf-toolbar-status-red' }}">{{ totals.failures }}</span></div>
+            <div class="sf-toolbar-info-piece"><b>Errors</b><span class="sf-toolbar-status {{ totals.errors > 0 ? 'sf-toolbar-status-red' }}">{{ totals.errors }}</span></div>
+        {% endset %}
+        {{ include('@WebProfiler/Profiler/toolbar_item.html.twig', {link: profiler_url, status: status}) }}
+    {% endif %}
+{% endblock %}
+
+{% block menu %}
+    {% set totals = collector.totals %}
+    <span class="label {{ totals.batches == 0 ? 'disabled' }} {{ totals.failures > 0 or totals.errors > 0 ? 'label-status-error' }}">
+        <span class="icon">⇄</span>
+        <strong>HTML translator</strong>
+        {% if totals.failures + totals.errors > 0 %}<span class="count">{{ totals.failures + totals.errors }}</span>{% endif %}
+    </span>
+{% endblock %}
+
+{% block panel %}
+    {% set totals = collector.totals %}
+    <h2>HTML translator</h2>
+
+    {% if totals.batches == 0 %}
+        <div class="empty"><p>No translation batches in this request.</p></div>
+    {% else %}
+        <div class="metrics">
+            <div class="metric"><span class="value">{{ totals.batches }}</span><span class="label">Batches</span></div>
+            <div class="metric"><span class="value">{{ totals.units }}</span><span class="label">Units</span></div>
+            <div class="metric"><span class="value">{{ totals.corrections }}</span><span class="label">Corrections</span></div>
+            <div class="metric"><span class="value">{{ totals.failures }}</span><span class="label">Failures</span></div>
+            <div class="metric"><span class="value">{{ totals.inputTokens }} → {{ totals.outputTokens }}</span><span class="label">Tokens</span></div>
+            <div class="metric"><span class="value">{{ totals.durationMs|number_format(1) }} ms</span><span class="label">Time</span></div>
+        </div>
+
+        <p class="text-muted">Batches sent to the providers, sub-requests included. Units served from the unit cache and issues after fallback are not shown: they are decided by the core translator, which the bundle cannot observe.</p>
+
+        <table>
+            <thead>
+                <tr><th>#</th><th>Provider</th><th>Locales</th><th>Units</th><th>Corrections</th><th>Failures</th><th>Tokens</th><th>Time</th></tr>
+            </thead>
+            <tbody>
+                {% for batch in collector.batches %}
+                    <tr class="{{ batch.failures + batch.permanentFailures > 0 or batch.error ? 'status-error' }}">
+                        <td>{{ loop.index }}</td>
+                        <td>{{ batch.entry }}</td>
+                        <td>{{ batch.source }} → {{ batch.target }}</td>
+                        <td>{{ batch.units }}</td>
+                        <td>{{ batch.corrections }}</td>
+                        <td>{{ batch.failures }}{% if batch.permanentFailures > 0 %} (+{{ batch.permanentFailures }} permanent){% endif %}</td>
+                        <td>{{ batch.inputTokens ?? '–' }} → {{ batch.outputTokens ?? '–' }}</td>
+                        <td>{{ batch.durationMs|number_format(1) }} ms</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td colspan="7">
+                            {% if batch.error %}<p class="text-danger">{{ batch.error }}</p>{% endif %}
+                            <details>
+                                <summary>Units</summary>
+                                <table>
+                                    <thead><tr><th>Unit</th><th>Source</th><th>Translation</th></tr></thead>
+                                    <tbody>
+                                        {% for unit in batch.preview %}
+                                            <tr>
+                                                <td>{{ unit.id }}</td>
+                                                <td>{{ unit.source }}</td>
+                                                <td>{% if unit.failure is not null %}<span class="text-danger">{{ unit.failure }}</span>{% else %}{{ unit.translation ?? '–' }}{% endif %}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </details>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if collector.omittedBatches > 0 %}
+            <p class="text-muted">{{ collector.omittedBatches }} more batches are counted in the totals but not listed.</p>
+        {% endif %}
+    {% endif %}
+{% endblock %}

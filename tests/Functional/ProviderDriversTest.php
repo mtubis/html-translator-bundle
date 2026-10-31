@@ -6,6 +6,7 @@ namespace HtmlTranslator\Bundle\Tests\Functional;
 
 use HtmlTranslator\Bundle\ChatModel\ChatModelFactory;
 use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
+use HtmlTranslator\Bundle\DependencyInjection\ProfilerDefinitions;
 use HtmlTranslator\Bundle\DependencyInjection\ProviderDefinitions;
 use HtmlTranslator\Bundle\DependencyInjection\TranslatorDefinitions;
 use HtmlTranslator\Bundle\Drivers;
@@ -36,6 +37,7 @@ use Throwable;
 #[UsesClass(Drivers::class)]
 #[UsesClass(HtmlRulesFactory::class)]
 #[UsesClass(TranslatorDefinitions::class)]
+#[UsesClass(ProfilerDefinitions::class)]
 final class ProviderDriversTest extends FunctionalTestCase
 {
     /** @var list<array{method: string, url: string, headers: array<string, list<string>>, body: array<array-key, mixed>}> */

@@ -1,0 +1,3 @@
+# Scenario fixture, on top of profiler.yaml, with TwigBundle and WebProfilerBundle in the kernel.
+web_profiler:
+    toolbar: false

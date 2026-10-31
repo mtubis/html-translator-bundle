@@ -52,6 +52,7 @@
         "symfony/event-dispatcher-contracts": "^3.4.2",
         "symfony/framework-bundle": "^7.4 || ^8.1",
         "symfony/monolog-bundle": "^4.1",
+        "symfony/translation-contracts": "^3.4.2",
         "symfony/twig-bundle": "^7.4 || ^8.1",
         "symfony/web-profiler-bundle": "^7.4 || ^8.1",
         "symfony/yaml": "^7.4 || ^8.1"
