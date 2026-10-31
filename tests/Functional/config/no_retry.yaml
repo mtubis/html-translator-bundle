@@ -1,0 +1,5 @@
+# Scenario fixture, on top of drivers.yaml: a single attempt per request.
+html_translator:
+    http:
+        retry:
+            max_attempts: 1
