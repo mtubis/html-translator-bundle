@@ -12,9 +12,9 @@ return new PhpCsFixer\Config()
     ->setRiskyAllowed(true)
     ->setCacheFile(__DIR__ . '/var/.php-cs-fixer.cache')
     ->setRules([
-        '@PER-CS2.0' => true,
-        '@PER-CS2.0:risky' => true,
-        '@PHP84Migration' => true,
+        '@PER-CS2x0' => true,
+        '@PER-CS2x0:risky' => true,
+        '@PHP8x4Migration' => true,
         'declare_strict_types' => true,
         'final_class' => true,
         'global_namespace_import' => ['import_classes' => true, 'import_constants' => false, 'import_functions' => false],

@@ -5,7 +5,7 @@ parameters:
         - tests
         - config
     excludePaths:
-        - tests/Functional/var
+        - tests/Functional/var (?)
     tmpDir: var/phpstan
     checkUninitializedProperties: true
     checkImplicitMixed: true
@@ -13,6 +13,8 @@ parameters:
     reportPossiblyNonexistentGeneralArrayOffset: true
     reportAnyTypeWideningInVarTag: true
     treatPhpDocTypesAsCertain: false
-    # phpstan/phpstan-symfony: point it at a dumped test container once the TestKernel exists (issue "Bootstrap").
-    # symfony:
-    #     containerXmlPath: tests/Functional/var/cache/default/HtmlTranslator_Bundle_Tests_Functional_TestKernelDefaultDebugContainer.xml
+    # Written by tests/phpstan-container.php (run by `composer stan` and the PostToolUse hook). phpstan-symfony reads
+    # it before bootstrapFiles run, so it cannot be generated from within PHPStan. On a fresh clone, run
+    # `composer stan` (not vendor/bin/phpstan directly) so the file exists.
+    symfony:
+        containerXmlPath: var/phpstan/container.xml
