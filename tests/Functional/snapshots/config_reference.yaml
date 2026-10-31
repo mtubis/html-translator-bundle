@@ -1,0 +1,171 @@
+# Default configuration for extension with alias: "html_translator"
+html_translator:
+
+    # The provider entry used where none is named: the service HtmlTranslator\HtmlTranslator. A literal value: env placeholders are not supported here.
+    default_provider:     openai
+
+    # Named providers. "driver" picks the core adapter: openai, gemini, ollama, vllm, lm_studio (OpenAI-compatible presets), openai_compatible (any other OpenAI-compatible server), anthropic, symfony_ai (planned, ADR-0008), pseudo (no network; dev, test). Each entry becomes the service "html_translator.translator.<name>" and the autowiring alias "HtmlTranslator $<name>Translator" (or #[Target('<name>')]).
+    providers:            # Required
+
+        # Prototype
+        provider:
+
+            # Picks the core adapter; the other keys depend on it. A literal value: env placeholders are not supported here.
+            driver:               ~ # One of "openai"; "gemini"; "ollama"; "vllm"; "lm_studio"; "openai_compatible"; "anthropic"; "pseudo"; "symfony_ai", Required
+
+            # openai, gemini, anthropic (required); vllm, openai_compatible. Use %env()% or Symfony secrets: a literal ends up in the compiled container.
+            api_key:              ~
+
+            # Required by every driver but pseudo, e.g. '%env(HTML_TRANSLATOR_OPENAI_MODEL)%'.
+            model:                ~
+
+            # API root without the endpoint. ollama, vllm, lm_studio, anthropic (~ = the driver's default); openai_compatible (required).
+            base_url:             ~
+
+            # openai_compatible: the name in model ids and error messages; ~ = the entry name.
+            name:                 ~
+
+            # openai (default json_schema), openai_compatible (default json_object). A literal value: env placeholders are not supported here.
+            json_mode:            ~ # One of "none"; "json_object"; "json_schema"; "json_schema_only"
+
+            # openai_compatible: the request field of the output limit (default max_tokens). A literal value: env placeholders are not supported here.
+            max_tokens_field:     ~ # One of "max_tokens"; "max_completion_tokens"
+
+            # openai_compatible, anthropic: extra request headers (name: value), e.g. a gateway token; treated as secret like the key.
+            extra_headers:
+
+                # Prototype
+                header:               ~
+
+            # anthropic: output_config.effort; ~ = the model's default. A literal value: env placeholders are not supported here.
+            effort:               ~ # One of null; "low"; "medium"; "high"; "xhigh"; "max"
+
+            # anthropic: let the API answer a refused request with a fallback model (Claude API only; default false).
+            refusal_fallbacks:    ~
+
+            # anthropic: further anthropic-beta values, e.g. "some-feature-2026-01-01".
+            betas:                []
+
+            # anthropic: the anthropic-version header; ~ = the adapter's default.
+            api_version:          ~
+
+            # anthropic: max_tokens when a request sets no limit; ~ = the adapter's default.
+            default_max_output_tokens: ~
+
+            # pseudo: 0 = never (default); n >= 1: break every n-th unit, to exercise fallbacks.
+            corrupt_every:        ~
+
+            # pseudo: true keeps corrupted units broken in corrective retries too (default false).
+            corrupt_retries:      ~
+
+    # HTTP: a scoped client of FrameworkBundle's http_client, wrapped as PSR-18 (ADR-0003). Retries are the core's; do not add retry_failed to this client.
+    http:
+
+        # Service id of an HttpClientInterface; ~ = a scoped client the bundle creates.
+        client:               null
+
+        # Idle timeout in seconds; translation batches can take a while. From env: '%env(float:HTML_TRANSLATOR_HTTP_TIMEOUT)%'.
+        timeout:              180.0
+
+        # Maximum duration of a request in seconds; ~ = no limit.
+        max_duration:         null
+
+        # The core RetryPolicy.
+        retry:
+
+            # Calls in total, the first included; 1 disables retries.
+            max_attempts:         3
+
+            # Wait before the first retry, doubling per retry (with jitter).
+            base_delay_ms:        1000
+
+            # Upper bound of a single wait, also for Retry-After.
+            max_delay_ms:         30000
+
+            # Retry network errors (no response at all).
+            retry_network_errors: true
+
+    # The profile entry used where none is named. A literal value: env placeholders are not supported here.
+    default_profile:      default
+
+    # Named translation profiles. "preset" is the starting point; the other keys override it. A "default" profile (preset: default) always exists.
+    profiles:
+
+        # Prototype
+        profile:
+
+            # default | technical | marketing | legal. A literal value: env placeholders are not supported here.
+            preset:               default # One of "default"; "technical"; "marketing"; "legal"
+
+            # default | formal | informal; ~ = the preset's. A literal value: env placeholders are not supported here.
+            formality:            ~ # One of "default"; "formal"; "informal"
+
+            # translate_all | prefer_original_technical_terms | keep_original; ~ = the preset's. A literal value: env placeholders are not supported here.
+            term_policy:          ~ # One of "translate_all"; "prefer_original_technical_terms"; "keep_original"
+
+            # e.g. "Developer documentation of a PHP framework"; ~ = the preset's.
+            domain:               ~
+
+            # Fixed translations: source term => translation.
+            glossary:
+
+                # Prototype
+                term:                 ~
+
+            # Terms kept exactly as written, e.g. [Symfony, Doctrine].
+            do_not_translate:     []
+
+            # Extra instructions for the model; ~ = the preset's.
+            instructions:         ~
+
+    # Defaults of TranslationOptions built by HtmlTranslator\Bundle\Options\TranslationOptionsFactory.
+    options:
+
+        # Source locale, e.g. "en"; ~ = the model detects the source language.
+        source:               null
+
+        # keep_original | text_nodes_only | throw. A literal value: env placeholders are not supported here.
+        fallback:             keep_original # One of "keep_original"; "text_nodes_only"; "throw"
+
+        # How often a unit failing validation is sent again with feedback.
+        max_corrective_retries: 2
+
+        # Upper bound of units per provider call.
+        batch_size:           20
+
+        # Approximate tokens of unit texts per provider call, not counting the instructions.
+        token_budget:         2000
+
+    # Additions to the core defaults of what is (not) translated.
+    html:
+
+        # e.g. [address]
+        skip_elements:        []
+
+        # e.g. [brand]
+        skip_classes:         []
+
+        # e.g. [data-tooltip]
+        translatable_attributes: []
+
+    # Unit cache: a PSR-6 pool. The bundle registers "cache.html_translator" (adapter: cache.app) unless "pool" names another pool. Translated units are reused per text, locale pair, profile and model.
+    cache:
+
+        # Reuse translated units across requests.
+        enabled:              true
+
+        # Service id of a PSR-6 pool.
+        pool:                 cache.html_translator
+
+    # Logging: the "html_translator" Monolog channel when MonologBundle is installed, otherwise the "logger" service.
+    logging:
+
+        # Give the translators a logger.
+        enabled:              true
+
+    # Profiler panel (kernel.debug only): batches, units, retries, failures and tokens per request (ADR-0006).
+    profiler:
+
+        # Collect data for the profiler panel; needs WebProfilerBundle.
+        enabled:              '%kernel.debug%'
+

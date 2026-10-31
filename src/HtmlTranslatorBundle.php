@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace HtmlTranslator\Bundle;
 
+use HtmlTranslator\Bundle\DependencyInjection\ConfigurationTree;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -12,9 +13,8 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 /**
  * Symfony integration of mtubis/html-translator (ARCHITECTURE §5).
  *
- * Skeleton: the configuration tree is specified in docs/config-reference.yaml and built in issue "Configuration
- * tree"; definitions per provider entry follow in the issues after it. Keep this class a thin entry point that
- * delegates to DependencyInjection\* builders.
+ * The configuration tree (specified in docs/config-reference.yaml) is built by DependencyInjection\ConfigurationTree.
+ * Keep this class a thin entry point that delegates to DependencyInjection\* builders.
  */
 final class HtmlTranslatorBundle extends AbstractBundle
 {
@@ -22,7 +22,7 @@ final class HtmlTranslatorBundle extends AbstractBundle
 
     public function configure(DefinitionConfigurator $definition): void
     {
-        // Intentionally empty until issue "Configuration tree": every key of docs/config-reference.yaml goes here.
+        ConfigurationTree::define($definition->rootNode());
     }
 
     /**
