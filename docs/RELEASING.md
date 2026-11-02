@@ -16,7 +16,7 @@ public API (ARCHITECTURE §4), and the CHANGELOG says how. Releases are cut from
 4. **CHANGELOG**: move the entries of `[Unreleased]` into a new `## [X.Y.Z] - YYYY-MM-DD` section (the tag date), with
    a one-line summary and links to the ADRs of new decisions. Update the link references at the bottom: `[Unreleased]`
    compares `vX.Y.Z...HEAD`, `[X.Y.Z]` points to the release tag.
-5. **Version constraints**: the core constraint in `composer.json` follows the core's current minor (ADR-0002), and
+5. **Version constraints**: the core constraint in `composer.json` is `^1.0`, raised only for a core feature the bundle uses (ADR-0002), and
    Symfony stays `^7.4 || ^8.1` (ADR-0005) unless an ADR says otherwise.
 6. **Roadmap**: mark the milestone as done in [ROADMAP](ROADMAP.md) and close the GitHub milestone.
 7. **Commit and merge** these changes (`docs: release X.Y.Z`) through a pull request.

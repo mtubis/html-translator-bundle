@@ -4,7 +4,7 @@ Each milestone is a GitHub milestone; each bullet is one issue = one Claude Code
 Issue bodies are drafted in `docs/issues/<milestone>/` and created with `scripts/create-issues.sh`.
 
 ## Bundle 0.1 — configured translators, console and profiler
-Released: [v0.1.0](https://github.com/mtubis/html-translator-bundle/releases/tag/v0.1.0).
+Released: [v0.1.0](https://github.com/mtubis/html-translator-bundle/releases/tag/v0.1.0); [v0.1.1](https://github.com/mtubis/html-translator-bundle/releases/tag/v0.1.1) runs on core 1.0.
 Goal: `composer require`, set two env vars, inject `HtmlTranslator` and translate; `debug:config`, `html-translator:check`
 and a profiler panel show what is going on. Configuration as in [config-reference.yaml](config-reference.yaml).
 

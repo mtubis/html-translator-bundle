@@ -4,6 +4,11 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-02
+
+Runs on `mtubis/html-translator` 1.0, the core's first release under its backward compatibility promise, and lets the
+OpenAI-compatible presets choose their JSON mode.
+
 ### Added
 - `json_mode` for the `gemini`, `ollama`, `vllm` and `lm_studio` drivers, passed to the core preset; unset, the
   preset's default applies. `json_object` brings back the 0.1 behaviour of `gemini`, `ollama` and `vllm` for a server
@@ -36,5 +41,6 @@ Monolog channel, the console commands `html-translator:translate` and `html-tran
 - Configuration tree for every key of `docs/config-reference.yaml`, validated at compile time: keys and required keys per driver, enums, ranges, `default_provider` and `default_profile` references. The `symfony_ai` driver is reserved for 0.3. A `default` profile always exists.
 - Architecture, ADRs 0001–0008 and the configuration specification (`docs/config-reference.yaml`).
 
-[Unreleased]: https://github.com/mtubis/html-translator-bundle/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/mtubis/html-translator-bundle/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/mtubis/html-translator-bundle/releases/tag/v0.1.1
 [0.1.0]: https://github.com/mtubis/html-translator-bundle/releases/tag/v0.1.0
