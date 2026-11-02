@@ -21,10 +21,10 @@ final class Drivers
     /** Keys an entry may set besides "driver". */
     private const array KEYS = [
         'openai' => ['api_key', 'model', 'json_mode'],
-        'gemini' => ['api_key', 'model'],
-        'ollama' => ['model', 'base_url'],
-        'vllm' => ['model', 'base_url', 'api_key'],
-        'lm_studio' => ['model', 'base_url'],
+        'gemini' => ['api_key', 'model', 'json_mode'],
+        'ollama' => ['model', 'base_url', 'json_mode'],
+        'vllm' => ['model', 'base_url', 'api_key', 'json_mode'],
+        'lm_studio' => ['model', 'base_url', 'json_mode'],
         'openai_compatible' => ['name', 'base_url', 'api_key', 'model', 'json_mode', 'max_tokens_field', 'extra_headers'],
         'anthropic' => ['api_key', 'model', 'effort', 'base_url', 'refusal_fallbacks', 'betas', 'extra_headers', 'api_version', 'default_max_output_tokens'],
         'pseudo' => ['corrupt_every', 'corrupt_retries'],

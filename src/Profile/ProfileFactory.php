@@ -56,7 +56,7 @@ final class ProfileFactory
 
         $doNotTranslate = array_values(self::strings($settings['do_not_translate'] ?? []));
         if ([] !== $doNotTranslate) {
-            $profile = $guard('do_not_translate', static fn(): TranslationProfile => $profile->withDoNotTranslate(...$doNotTranslate));
+            $profile = $guard('do_not_translate', static fn(): TranslationProfile => $profile->withDoNotTranslateTerms($doNotTranslate));
         }
 
         if (\is_string($instructions = $settings['instructions'] ?? null)) {
@@ -79,6 +79,8 @@ final class ProfileFactory
     }
 
     /**
+     * Keys stay as PHP makes them: a YAML list keeps int keys, so the core rejects a glossary written as a list.
+     *
      * @return array<string, string>
      */
     private static function strings(mixed $values): array

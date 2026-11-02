@@ -34,10 +34,10 @@ final class DriversTest extends TestCase
     public function it_uses_the_key_names_of_the_laravel_package(): void
     {
         self::assertSame(['api_key', 'model', 'json_mode'], Drivers::keysOf('openai'));
-        self::assertSame(['api_key', 'model'], Drivers::keysOf('gemini'));
-        self::assertSame(['model', 'base_url'], Drivers::keysOf('ollama'));
-        self::assertSame(['model', 'base_url', 'api_key'], Drivers::keysOf('vllm'));
-        self::assertSame(['model', 'base_url'], Drivers::keysOf('lm_studio'));
+        self::assertSame(['api_key', 'model', 'json_mode'], Drivers::keysOf('gemini'));
+        self::assertSame(['model', 'base_url', 'json_mode'], Drivers::keysOf('ollama'));
+        self::assertSame(['model', 'base_url', 'api_key', 'json_mode'], Drivers::keysOf('vllm'));
+        self::assertSame(['model', 'base_url', 'json_mode'], Drivers::keysOf('lm_studio'));
         self::assertSame(['name', 'base_url', 'api_key', 'model', 'json_mode', 'max_tokens_field', 'extra_headers'], Drivers::keysOf('openai_compatible'));
         self::assertSame(['api_key', 'model', 'effort', 'base_url', 'refusal_fallbacks', 'betas', 'extra_headers', 'api_version', 'default_max_output_tokens'], Drivers::keysOf('anthropic'));
         self::assertSame(['corrupt_every', 'corrupt_retries'], Drivers::keysOf('pseudo'));

@@ -147,11 +147,12 @@ tests/
 
 ## 8. Relationship to the core and the Laravel package
 
-- Core constraint follows the core's current minor (`^0.4`), `^1.0` after the freeze.
+- Core constraint is `^1.0`: the core is under its backward compatibility promise (core ADR-0018), so a core minor
+  needs no bundle release. A new core feature is used only after raising the lower bound (e.g. `^1.1`).
 - Config keys, driver names and command names match the Laravel package (`api_key`, `json_mode`, `refusal_fallbacks`,
   `html-translator:check`), so docs and users move between frameworks easily. Symfony naming (snake_case YAML, service
   ids, `#[Target]`) wins where the frameworks differ.
-- Friction with the core is drafted in `docs/core-feedback/` (skill `draft-core-issue`). Open drafts relevant here:
-  a translator interface for decoration (`docs/core-feedback/translator-interface.md`) and public `UntrustedText`
-  quoting (drafted in the Laravel package, `docs/core-feedback/public-untrusted-text-quoting.md`; the bundle needs it
-  for runtime configuration errors too).
+- Friction with the core is drafted in `docs/core-feedback/` (skill `draft-core-issue`). Since the 1.0 freeze the core
+  only adds in a minor, so a draft names an additive change or waits for 2.0. Open draft relevant here: a translator
+  interface for decoration (`docs/core-feedback/translator-interface.md`). Public `UntrustedText::quote()` shipped in
+  core 1.0; the bundle's messages name config paths and never quote values, so it does not use it.

@@ -1,5 +1,5 @@
-# Scenario fixture for the console commands: a working and a corrupting provider, no unit cache (the pseudo providers
-# would share cached units, see docs/core-feedback/pseudo-cache-id-corruption-settings.md).
+# Scenario fixture for the console commands: a working and a corrupting provider, no unit cache (every run reaches
+# the provider).
 html_translator:
     default_provider: pseudo
     cache:

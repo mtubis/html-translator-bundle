@@ -101,8 +101,8 @@ final class ProviderDefinitionsTest extends TestCase
         self::assertFalse($builder->hasDefinition('html_translator.chat_model.pseudo'));
         $provider = $builder->getDefinition('html_translator.provider.pseudo');
         self::assertSame(PseudoLocalizationProvider::class, $provider->getClass());
-        self::assertSame([3, true], $provider->getArguments());
-        self::assertSame([0, false], $builder->getDefinition('html_translator.provider.plain')->getArguments());
+        self::assertSame(['$corruptEvery' => 3, '$corruptRetries' => true], $provider->getArguments());
+        self::assertSame(['$corruptEvery' => 0, '$corruptRetries' => false], $builder->getDefinition('html_translator.provider.plain')->getArguments());
     }
 
     /**

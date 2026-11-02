@@ -50,9 +50,10 @@ final class ProviderDriversTest extends FunctionalTestCase
     {
         // entry, URL, auth headers (name => values), model, JSON mode (response_format or output_config)
         yield 'openai' => ['openai', 'https://api.openai.com/v1/chat/completions', ['authorization' => ['Bearer test-openai-key']], 'gpt-test', 'json_schema'];
-        yield 'gemini' => ['gemini', 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', ['authorization' => ['Bearer test-gemini-key']], 'gemini-test', 'json_object'];
-        yield 'ollama' => ['ollama', 'http://localhost:11434/v1/chat/completions', [], 'llama-test', 'json_object'];
-        yield 'vllm' => ['vllm', 'http://localhost:8000/v1/chat/completions', ['authorization' => ['Bearer test-vllm-key']], 'vllm-test', 'json_object'];
+        yield 'gemini' => ['gemini', 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', ['authorization' => ['Bearer test-gemini-key']], 'gemini-test', 'json_schema'];
+        yield 'ollama' => ['ollama', 'http://localhost:11434/v1/chat/completions', [], 'llama-test', 'json_schema'];
+        yield 'vllm' => ['vllm', 'http://localhost:8000/v1/chat/completions', ['authorization' => ['Bearer test-vllm-key']], 'vllm-test', 'json_schema'];
+        yield 'ollama with json_mode' => ['older_ollama', 'http://localhost:11434/v1/chat/completions', [], 'llama-test', 'json_object'];
         yield 'lm_studio' => ['lm_studio', 'http://localhost:1234/v1/chat/completions', [], 'lmstudio-test', 'json_schema'];
         yield 'openai_compatible' => ['together', 'https://api.together.xyz/v1/chat/completions', ['authorization' => ['Bearer test-together-key']], 'together-test', 'json_object'];
         yield 'anthropic' => ['anthropic', 'https://api.anthropic.com/v1/messages', ['x-api-key' => ['test-anthropic-key']], 'claude-test', 'json_schema'];

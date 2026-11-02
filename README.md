@@ -162,14 +162,18 @@ final readonly class DocsTranslator
 | Driver | Core adapter | Base URL | Authentication | Required keys | Reference env |
 |---|---|---|---|---|---|
 | `openai` | `OpenAiCompatibleConfig::openAi()` (json_schema) | `https://api.openai.com/v1` | Bearer | `api_key`, `model` | `OPENAI_API_KEY`, `HTML_TRANSLATOR_OPENAI_MODEL` |
-| `gemini` | `OpenAiCompatibleConfig::gemini()` | Gemini's OpenAI-compatible endpoint | Bearer | `api_key`, `model` | `GEMINI_API_KEY`, `HTML_TRANSLATOR_GEMINI_MODEL` |
+| `gemini` | `OpenAiCompatibleConfig::gemini()` (json_schema) | Gemini's OpenAI-compatible endpoint | Bearer | `api_key`, `model` | `GEMINI_API_KEY`, `HTML_TRANSLATOR_GEMINI_MODEL` |
 | `anthropic` | `AnthropicConfig` | `https://api.anthropic.com/v1` | `x-api-key` | `api_key`, `model` | `ANTHROPIC_API_KEY`, `HTML_TRANSLATOR_ANTHROPIC_MODEL` |
-| `ollama` | `OpenAiCompatibleConfig::ollama()` | `http://localhost:11434/v1` (keep the `/v1`) | none | `model` | `HTML_TRANSLATOR_OLLAMA_MODEL` |
-| `vllm` | `OpenAiCompatibleConfig::vllm()` | `http://localhost:8000/v1` | optional Bearer | `model` | |
-| `lm_studio` | `OpenAiCompatibleConfig::lmStudio()` | `http://localhost:1234/v1` | none | `model` | |
-| `openai_compatible` | `new OpenAiCompatibleConfig()` | your server | optional Bearer, `extra_headers` | `base_url`, `model` | |
+| `ollama` | `OpenAiCompatibleConfig::ollama()` (json_schema) | `http://localhost:11434/v1` (keep the `/v1`) | none | `model` | `HTML_TRANSLATOR_OLLAMA_MODEL` |
+| `vllm` | `OpenAiCompatibleConfig::vllm()` (json_schema) | `http://localhost:8000/v1` | optional Bearer | `model` | |
+| `lm_studio` | `OpenAiCompatibleConfig::lmStudio()` (json_schema_only) | `http://localhost:1234/v1` | none | `model` | |
+| `openai_compatible` | `new OpenAiCompatibleConfig()` (json_object) | your server | optional Bearer, `extra_headers` | `base_url`, `model` | |
 | `pseudo` | `PseudoLocalizationProvider` | no network | — | — | |
 | `symfony_ai` | planned for 0.3 ([ADR-0008](docs/adr/0008-symfony-ai-driver-later.md)) | | | | |
+
+The OpenAI-compatible drivers take an optional `json_mode` (`none`, `json_object`, `json_schema`, `json_schema_only`);
+unset, the core preset's mode in brackets applies. An older Ollama or vLLM server without structured outputs answers
+`json_schema` with HTTP 400; set `json_mode: json_object` for it.
 
 Every key, default and comment is in [docs/config-reference.yaml](docs/config-reference.yaml); `bin/console
 config:dump-reference html_translator` prints the same tree. Keys, models, URLs, header values and the timeout may come

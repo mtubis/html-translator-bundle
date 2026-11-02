@@ -1,5 +1,8 @@
 # PseudoLocalizationProvider::cacheId() should include the corruption settings
 
+> **Status: fixed** in core 0.4.1 (mtubis/html-translator#93); the cache id names the corruption settings. Kept for
+> the record.
+
 ## Context
 `PseudoLocalizationProvider::cacheId()` returns the constant `pseudo-localization` for every instance. Its docblock
 says corrupted translations are invalid and so never reach a cache. That holds, but the other direction breaks: a

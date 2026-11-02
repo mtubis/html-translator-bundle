@@ -51,6 +51,7 @@ final class ConfigurationTreeTest extends TestCase
     {
         yield 'vllm' => [['providers' => ['vllm' => ['driver' => 'vllm', 'model' => 'meta-llama/Llama-3.1-8B-Instruct', 'base_url' => 'http://localhost:8000/v1', 'api_key' => null]]]];
         yield 'lm_studio' => [['providers' => ['lm_studio' => ['driver' => 'lm_studio', 'model' => 'qwen2.5-7b-instruct', 'base_url' => 'http://localhost:1234/v1']]]];
+        yield 'older ollama' => [['providers' => ['ollama' => ['driver' => 'ollama', 'model' => '%env(HTML_TRANSLATOR_OLLAMA_MODEL)%', 'json_mode' => 'json_object']]]];
         yield 'together' => [['providers' => ['together' => [
             'driver' => 'openai_compatible',
             'name' => 'together',
@@ -307,6 +308,8 @@ final class ConfigurationTreeTest extends TestCase
         yield 'refusal_fallbacks false on openai' => [['driver' => 'openai', 'api_key' => 'k', 'model' => 'm', 'refusal_fallbacks' => false], '"refusal_fallbacks" is not supported by the "openai" driver'];
         yield 'model on pseudo' => [['driver' => 'pseudo', 'model' => 'm'], 'Invalid configuration for path "html_translator.providers.p": "model" is not supported by the "pseudo" driver; supported keys: corrupt_every, corrupt_retries'];
         yield 'bad json_mode' => [['driver' => 'openai', 'api_key' => 'k', 'model' => 'm', 'json_mode' => 'schema'], 'The value "schema" is not allowed for path "html_translator.providers.p.json_mode"'];
+        yield 'bad json_mode on ollama' => [['driver' => 'ollama', 'model' => 'm', 'json_mode' => 'json'], 'The value "json" is not allowed for path "html_translator.providers.p.json_mode"'];
+        yield 'json_mode on anthropic' => [['driver' => 'anthropic', 'api_key' => 'k', 'model' => 'm', 'json_mode' => 'json_object'], '"json_mode" is not supported by the "anthropic" driver'];
         yield 'bad effort' => [['driver' => 'anthropic', 'api_key' => 'k', 'model' => 'm', 'effort' => 'extreme'], 'The value "extreme" is not allowed for path "html_translator.providers.p.effort"'];
         yield 'bad max_tokens_field' => [['driver' => 'openai_compatible', 'base_url' => 'http://x', 'model' => 'm', 'max_tokens_field' => 'max_output_tokens'], 'The value "max_output_tokens" is not allowed for path "html_translator.providers.p.max_tokens_field"'];
         yield 'betas not a list of strings' => [['driver' => 'anthropic', 'api_key' => 'k', 'model' => 'm', 'betas' => [['x']]], 'html_translator.providers.p.betas'];

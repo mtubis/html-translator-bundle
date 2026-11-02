@@ -115,7 +115,7 @@ final class ConfigurationTree
                         ->info('openai_compatible: the name in model ids and error messages; ~ = the entry name.')
                     ->end()
                     ->enumNode('json_mode')
-                        ->info('openai (default json_schema), openai_compatible (default json_object).' . self::LITERAL_ONLY)
+                        ->info('OpenAI-compatible drivers: default json_schema (json_schema_only for lm_studio, json_object for openai_compatible); json_object for a server without structured outputs (older Ollama, vLLM).' . self::LITERAL_ONLY)
                         ->values(array_column(JsonMode::cases(), 'value'))
                     ->end()
                     ->enumNode('max_tokens_field')

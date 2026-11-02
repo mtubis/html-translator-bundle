@@ -28,4 +28,4 @@ and a profiler panel show what is going on. Configuration as in [config-referenc
 ## Then
 - Twig filter (`|translate_html('de')`, cache-only by default) — only if there is demand; translating at render time is expensive.
 - EasyAdmin integration (the Symfony counterpart of the Filament plugin): "Translate with AI" action on rich-text fields, built on 0.2.
-- Follow core releases (1.0 → `^1.0`), Symfony 8.2 (November 2026) and 8.3/8.4 LTS.
+- Follow core releases (constraint `^1.0` since core 1.0), Symfony 8.2 (November 2026) and 8.3/8.4 LTS.
