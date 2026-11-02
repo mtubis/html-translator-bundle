@@ -21,6 +21,11 @@ html_translator:
         ollama:
             driver: ollama
             model: llama-test
+        older_ollama:
+            # A server without structured outputs answers json_schema with HTTP 400.
+            driver: ollama
+            model: llama-test
+            json_mode: json_object
         vllm:
             driver: vllm
             model: vllm-test

@@ -52,16 +52,18 @@ final class ChatModelFactoryTest extends TestCase
     {
         $config = $this->openAiCompatible('gemini', ['api_key' => 'k', 'model' => 'gemini-test']);
 
-        self::assertSame(['gemini', 'https://generativelanguage.googleapis.com/v1beta/openai', 'gemini-test', JsonMode::JsonObject, OpenAiCompatibleConfig::MAX_TOKENS], $this->describe($config));
+        self::assertSame(['gemini', 'https://generativelanguage.googleapis.com/v1beta/openai', 'gemini-test', JsonMode::JsonSchema, OpenAiCompatibleConfig::MAX_TOKENS], $this->describe($config));
     }
 
     /**
+     * The core presets choose the default JSON mode per server (json_schema since core 1.0).
+     *
      * @return iterable<string, array{string, string, string, JsonMode}>
      */
     public static function localPresets(): iterable
     {
-        yield 'ollama' => ['ollama', 'ollama', 'http://localhost:11434/v1', JsonMode::JsonObject];
-        yield 'vllm' => ['vllm', 'vllm', 'http://localhost:8000/v1', JsonMode::JsonObject];
+        yield 'ollama' => ['ollama', 'ollama', 'http://localhost:11434/v1', JsonMode::JsonSchema];
+        yield 'vllm' => ['vllm', 'vllm', 'http://localhost:8000/v1', JsonMode::JsonSchema];
         yield 'lm_studio' => ['lm_studio', 'lmstudio', 'http://localhost:1234/v1', JsonMode::JsonSchemaOnly];
     }
 
@@ -93,6 +95,34 @@ final class ChatModelFactoryTest extends TestCase
         $config = $this->openAiCompatible($driver, ['model' => 'local-model', 'base_url' => 'http://gpu-box:9000/v1']);
 
         self::assertSame('http://gpu-box:9000/v1', $config->baseUrl);
+    }
+
+    /**
+     * @return iterable<string, array{string, array<string, mixed>, OpenAiCompatibleConfig}>
+     */
+    public static function presetsWithAJsonMode(): iterable
+    {
+        yield 'gemini' => ['gemini', ['api_key' => 'k', 'model' => 'g', 'json_mode' => 'json_object'], OpenAiCompatibleConfig::gemini('k', 'g', JsonMode::JsonObject)];
+        yield 'ollama' => ['ollama', ['model' => 'l', 'json_mode' => 'json_object'], OpenAiCompatibleConfig::ollama('l', jsonMode: JsonMode::JsonObject)];
+        yield 'ollama with base url' => ['ollama', ['model' => 'l', 'base_url' => 'http://ollama:11434/v1', 'json_mode' => 'none'], OpenAiCompatibleConfig::ollama('l', 'http://ollama:11434/v1', JsonMode::None)];
+        yield 'vllm' => ['vllm', ['model' => 'q', 'json_mode' => 'json_object'], OpenAiCompatibleConfig::vllm('q', jsonMode: JsonMode::JsonObject)];
+        yield 'vllm with key only' => ['vllm', ['model' => 'q', 'api_key' => 'k'], OpenAiCompatibleConfig::vllm('q', apiKey: 'k')];
+        yield 'vllm with everything' => ['vllm', ['model' => 'q', 'base_url' => 'http://gpu:8000/v1', 'api_key' => 'k', 'json_mode' => 'json_object'], OpenAiCompatibleConfig::vllm('q', 'http://gpu:8000/v1', 'k', JsonMode::JsonObject)];
+        yield 'lm_studio' => ['lm_studio', ['model' => 'p', 'json_mode' => 'none'], OpenAiCompatibleConfig::lmStudio('p', jsonMode: JsonMode::None)];
+        yield 'null json mode keeps the preset default' => ['ollama', ['model' => 'l', 'json_mode' => null], OpenAiCompatibleConfig::ollama('l')];
+    }
+
+    /**
+     * @param array<string, mixed> $entry
+     */
+    #[Test]
+    #[DataProvider('presetsWithAJsonMode')]
+    public function it_passes_the_json_mode_of_a_preset(string $driver, array $entry, OpenAiCompatibleConfig $expected): void
+    {
+        $config = $this->openAiCompatible($driver, $entry);
+
+        self::assertSame($this->describe($expected), $this->describe($config));
+        self::assertSame($expected->headers(), $config->headers());
     }
 
     #[Test]
@@ -283,6 +313,7 @@ final class ChatModelFactoryTest extends TestCase
         yield 'header with a line break' => ['openai_compatible', ['base_url' => 'http://x', 'model' => 'm', 'api_key' => self::SECRET_KEY, 'extra_headers' => ['X-Token' => self::SECRET_HEADER . "\r\nX-Evil: 1"]]];
         yield 'beta of the wrong type next to secrets' => ['anthropic', ['api_key' => self::SECRET_KEY, 'model' => 'm', 'betas' => [1], 'extra_headers' => ['X-Token' => self::SECRET_HEADER]]];
         yield 'header of the wrong type next to secrets' => ['anthropic', ['api_key' => self::SECRET_KEY, 'model' => 'm', 'extra_headers' => ['X-Token' => self::SECRET_HEADER, 'X-Other' => 1]]];
+        yield 'vllm base URL next to a key and a json mode' => ['vllm', ['model' => 'm', 'api_key' => self::SECRET_KEY, 'base_url' => 'ftp://x', 'json_mode' => 'json_object']];
         yield 'bad base URL next to secrets' => ['anthropic', ['api_key' => self::SECRET_KEY, 'model' => 'm', 'base_url' => 'not a url', 'extra_headers' => ['X-Token' => self::SECRET_HEADER]]];
     }
 

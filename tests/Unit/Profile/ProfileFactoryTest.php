@@ -87,6 +87,8 @@ final class ProfileFactoryTest extends TestCase
         yield 'domain with a line break' => [['domain' => "a\nb"], 'html_translator.profiles.p.domain: '];
         yield 'blank instructions' => [['instructions' => ' '], 'html_translator.profiles.p.instructions: '];
         yield 'blank glossary term' => [['glossary' => [' ' => 'x']], 'html_translator.profiles.p.glossary: '];
+        // A YAML list instead of a map ("glossary: [pull request, branch]"); core 1.0 rejects it.
+        yield 'glossary as a list' => [['glossary' => ['pull request', 'branch']], 'html_translator.profiles.p.glossary: terms must map source terms to target terms, got a list.'];
     }
 
     /**

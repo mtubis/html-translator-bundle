@@ -25,7 +25,7 @@ html_translator:
             # openai_compatible: the name in model ids and error messages; ~ = the entry name.
             name:                 ~
 
-            # openai (default json_schema), openai_compatible (default json_object). A literal value: env placeholders are not supported here.
+            # OpenAI-compatible drivers: default json_schema (json_schema_only for lm_studio, json_object for openai_compatible); json_object for a server without structured outputs (older Ollama, vLLM). A literal value: env placeholders are not supported here.
             json_mode:            ~ # One of "none"; "json_object"; "json_schema"; "json_schema_only"
 
             # openai_compatible: the request field of the output limit (default max_tokens). A literal value: env placeholders are not supported here.

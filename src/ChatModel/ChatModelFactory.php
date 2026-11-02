@@ -69,30 +69,25 @@ final readonly class ChatModelFactory
     public function config(string $name, string $driver, #[SensitiveParameter] array $entry): OpenAiCompatibleConfig|AnthropicConfig
     {
         // The keys Drivers::requiredKeysOf() lists; each arm reads its own, in the order of the core arguments.
+        // Optional core arguments go by name: their position is not covered by the core's BC promise (ADR-0018).
         $required = fn(string $key): string => $this->required($name, $driver, $entry, $key);
         $jsonMode = static fn(JsonMode $default): JsonMode => JsonMode::from(self::literal($entry, 'json_mode') ?? $default->value);
 
         try {
             return match ($driver) {
-                'openai' => OpenAiCompatibleConfig::openAi($required('api_key'), $required('model'), $jsonMode(JsonMode::JsonSchema)),
-                'gemini' => OpenAiCompatibleConfig::gemini($required('api_key'), $required('model')),
-                'ollama' => null === ($baseUrl = $this->optional($name, $entry, 'base_url'))
-                    ? OpenAiCompatibleConfig::ollama($required('model'))
-                    : OpenAiCompatibleConfig::ollama($required('model'), $baseUrl),
-                'vllm' => null === ($baseUrl = $this->optional($name, $entry, 'base_url'))
-                    ? OpenAiCompatibleConfig::vllm($required('model'), apiKey: $this->optional($name, $entry, 'api_key'))
-                    : OpenAiCompatibleConfig::vllm($required('model'), $baseUrl, $this->optional($name, $entry, 'api_key')),
-                'lm_studio' => null === ($baseUrl = $this->optional($name, $entry, 'base_url'))
-                    ? OpenAiCompatibleConfig::lmStudio($required('model'))
-                    : OpenAiCompatibleConfig::lmStudio($required('model'), $baseUrl),
+                'openai' => OpenAiCompatibleConfig::openAi($required('api_key'), $required('model'), jsonMode: $jsonMode(JsonMode::JsonSchema)),
+                'gemini' => OpenAiCompatibleConfig::gemini($required('api_key'), $required('model'), ...$this->presetJsonMode($entry)),
+                'ollama' => OpenAiCompatibleConfig::ollama($required('model'), ...$this->presetOptions($name, $entry)),
+                'vllm' => OpenAiCompatibleConfig::vllm($required('model'), ...$this->presetOptions($name, $entry), apiKey: $this->optional($name, $entry, 'api_key')),
+                'lm_studio' => OpenAiCompatibleConfig::lmStudio($required('model'), ...$this->presetOptions($name, $entry)),
                 'openai_compatible' => new OpenAiCompatibleConfig(
                     $this->optional($name, $entry, 'name') ?? $name,
                     $required('base_url'),
                     $required('model'),
-                    $this->optional($name, $entry, 'api_key'),
-                    $jsonMode(JsonMode::JsonObject),
-                    self::literal($entry, 'max_tokens_field') ?? OpenAiCompatibleConfig::MAX_TOKENS,
-                    $this->headers($name, $entry),
+                    apiKey: $this->optional($name, $entry, 'api_key'),
+                    jsonMode: $jsonMode(JsonMode::JsonObject),
+                    maxTokensField: self::literal($entry, 'max_tokens_field') ?? OpenAiCompatibleConfig::MAX_TOKENS,
+                    extraHeaders: $this->headers($name, $entry),
                 ),
                 'anthropic' => new AnthropicConfig(
                     $required('model'),
@@ -111,6 +106,33 @@ final readonly class ChatModelFactory
             // Core messages name settings, never the key or header values (HttpSecrets).
             throw InvalidConfigurationException::forPath(self::PREFIX . $name, $exception->getMessage(), $exception);
         }
+    }
+
+    /**
+     * The optional preset arguments that are set, by name: an unset one keeps the preset's own default, which the core
+     * chooses per server (json_schema for ollama, json_schema_only for lm_studio) and may revise in a later release.
+     *
+     * @param array<array-key, mixed> $entry
+     *
+     * @return array{baseUrl?: string, jsonMode?: JsonMode}
+     */
+    private function presetOptions(string $name, #[SensitiveParameter] array $entry): array
+    {
+        $baseUrl = $this->optional($name, $entry, 'base_url');
+
+        return (null === $baseUrl ? [] : ['baseUrl' => $baseUrl]) + $this->presetJsonMode($entry);
+    }
+
+    /**
+     * @param array<array-key, mixed> $entry
+     *
+     * @return array{jsonMode?: JsonMode}
+     */
+    private function presetJsonMode(#[SensitiveParameter] array $entry): array
+    {
+        $jsonMode = self::literal($entry, 'json_mode');
+
+        return null === $jsonMode ? [] : ['jsonMode' => JsonMode::from($jsonMode)];
     }
 
     /**

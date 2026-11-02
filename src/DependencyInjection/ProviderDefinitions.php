@@ -114,7 +114,7 @@ final class ProviderDefinitions
 
         if ('pseudo' === $driver) {
             $builder->register(self::PROVIDER_PREFIX . $name, PseudoLocalizationProvider::class)
-                ->setArguments([$entry['corrupt_every'] ?? 0, $entry['corrupt_retries'] ?? false]);
+                ->setArguments(['$corruptEvery' => $entry['corrupt_every'] ?? 0, '$corruptRetries' => $entry['corrupt_retries'] ?? false]);
 
             return;
         }
