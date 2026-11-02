@@ -4,6 +4,23 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- `json_mode` for the `gemini`, `ollama`, `vllm` and `lm_studio` drivers, passed to the core preset; unset, the
+  preset's default applies. `json_object` brings back the 0.1 behaviour of `gemini`, `ollama` and `vllm` for a server
+  without structured outputs.
+
+### Changed
+- Requires `mtubis/html-translator` ^1.0 (was ^0.4); see the core's
+  [UPGRADE-1.0.md](https://github.com/mtubis/html-translator/blob/v1.0.0/UPGRADE-1.0.md). Core changes that reach
+  every application:
+  - Behaviour change: the `gemini`, `ollama` and `vllm` drivers send the answer schema (`json_schema`) instead of
+    `json_object`; an older server without structured outputs answers HTTP 400 (set `json_mode: json_object`).
+  - A batch the model refuses is sent again in halves until the refused units are found (core ADR-0019), which costs
+    further calls; token stats also count failed calls that reported usage, so totals may come out higher.
+  - A profile `glossary` written as a YAML list instead of a map is rejected with an `InvalidConfigurationException`
+    for `html_translator.profiles.<name>.glossary` (it used to become a glossary of the terms "0", "1", …).
+- `do_not_translate` terms are passed with `TranslationProfile::withDoNotTranslateTerms()`.
+
 ## [0.1.0] - 2026-11-01
 
 First release: configured translators for every core driver, named autowiring, profiles and options, unit cache and

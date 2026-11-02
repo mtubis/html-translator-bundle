@@ -9,7 +9,7 @@ Same situation as Laravel ADR-0002: the core is 0.x, and its 1.0 freeze will mar
 ## Decision
 - The bundle uses the core's public tier only: `HtmlTranslator` constructed with provider, cache, logger, `SkipRules`, `TranslatableAttributes`; `TranslationOptions`, results, profiles, exceptions, provider and chat-model ports, adapters and their configs, `Retrier`/`RetryPolicy`, `PseudoLocalizationProvider`. It never injects `HtmlLoader`, `Segmenter`, `StructureValidator`, `Reassembler`, `Batcher`, `TermChecker` or `PromptBuilder`.
 - No edits in `vendor/`, no copies or subclasses of core classes. A needed change is drafted in `docs/core-feedback/` (skill `draft-core-issue`); a temporary workaround is marked `TODO(core#<n>)` and has a test that fails once the core is fixed.
-- Composer constraint: the core's current minor (`^0.4`), `^1.0` after the freeze.
+- Composer constraint: `^1.0` since the core's 1.0 freeze (core ADR-0018, backward compatibility promise); before it, the core's current minor (`^0.4`). A core feature added in a minor is used only after raising the lower bound (e.g. `^1.1`). Optional core arguments are passed by name; their position is not part of the core API.
 
 ## Consequences
 Core refactorings do not break the bundle; friction surfaces as core issues before the freeze.
