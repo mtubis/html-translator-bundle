@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-14
+
+Supply-chain hardening of the repository; the code, the configuration and the public API are unchanged.
+
+### Security
+- A [security policy](SECURITY.md): supported versions and how to report a vulnerability privately through GitHub
+  security advisories.
+- CI actions are pinned to commit SHAs, and Dependabot keeps them and the Composer dependencies up to date, with a
+  7-day cooldown before a new release is proposed.
+
 ## [0.1.1] - 2026-11-02
 
 Runs on `mtubis/html-translator` 1.0, the core's first release under its backward compatibility promise, and lets the
@@ -41,6 +51,7 @@ Monolog channel, the console commands `html-translator:translate` and `html-tran
 - Configuration tree for every key of `docs/config-reference.yaml`, validated at compile time: keys and required keys per driver, enums, ranges, `default_provider` and `default_profile` references. The `symfony_ai` driver is reserved for 0.3. A `default` profile always exists.
 - Architecture, ADRs 0001–0008 and the configuration specification (`docs/config-reference.yaml`).
 
-[Unreleased]: https://github.com/mtubis/html-translator-bundle/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/mtubis/html-translator-bundle/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/mtubis/html-translator-bundle/releases/tag/v0.1.2
 [0.1.1]: https://github.com/mtubis/html-translator-bundle/releases/tag/v0.1.1
 [0.1.0]: https://github.com/mtubis/html-translator-bundle/releases/tag/v0.1.0
