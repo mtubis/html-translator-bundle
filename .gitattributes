@@ -13,6 +13,7 @@
 /.php-cs-fixer.dist.php export-ignore
 /CLAUDE.md              export-ignore
 /CONTRIBUTING.md        export-ignore
+/SECURITY.md            export-ignore
 /infection.json5        export-ignore
 /phpstan.neon.dist      export-ignore
 /phpunit.xml.dist       export-ignore
